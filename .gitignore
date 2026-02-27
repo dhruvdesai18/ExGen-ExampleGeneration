@@ -2,3 +2,4 @@
 .venv
 gemma-3-270m-bnb-nf4
 Ministral-3-3B-Instruct-2512-bnb-nf4
+examples.jsonl
