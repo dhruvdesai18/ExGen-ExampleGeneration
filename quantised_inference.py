@@ -21,7 +21,7 @@ while True:
         messages, return_tensors="pt", return_dict=True
     ).to(model.device)
     output = model.generate(
-        **user_prompt, max_new_tokens=256, do_sample=True, temperature=0.7, top_p=0.9
+        **user_prompt, max_new_tokens=512, do_sample=True, temperature=0.7, top_p=0.9
     )[0]
     print(
         tokeniser.decode(
