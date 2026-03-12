@@ -1,0 +1,20 @@
+run:
+  run_id: ministral_augmented_eval_v1
+  seed: 42
+
+dataset:
+  split_path: data/processed/test_items.parquet
+  language: english
+
+model_config: configs/models/ministral_qft.yaml
+generator_config: configs/generators/augmented.yaml
+retrieval_config: configs/retrieval/default.yaml
+
+evaluations:
+  - configs/evaluation/oxfordeval.yaml
+  - configs/evaluation/gdex.yaml
+  - configs/evaluation/readability.yaml
+
+output:
+  generation_path: data/outputs/generations/ministral_augmented_eval_v1.jsonl
+  evaluation_dir: data/outputs/evaluations/ministral_augmented_eval_v1

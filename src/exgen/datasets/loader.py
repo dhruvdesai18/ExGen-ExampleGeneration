@@ -1,0 +1,1 @@
+# TODO: load words to LexicalItem[]
