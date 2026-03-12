@@ -1,7 +1,10 @@
 import json
 import random
 
-def generate_prompt_from_fetched_data(target_word, jsonl_file="examples.jsonl", level="intermediate"):
+
+def generate_prompt_from_fetched_data(
+    target_word, jsonl_file="data/examples.jsonl", level="intermediate"
+):
     examples = []
 
     try:
@@ -29,7 +32,7 @@ def generate_prompt_from_fetched_data(target_word, jsonl_file="examples.jsonl", 
     # ---------------------------------------------------------------------
     # ADVANCED PROMPT ARCHITECTURE (Based on GDEX & CoT Methodologies)
     # ---------------------------------------------------------------------
-    
+
     # The System Prompt establishes the expert persona and strict GDEX rules
     system_instruction = """You are an expert computational lexicographer tasked with generating example sentences for a high-tier language learning dictionary. Your primary objective is to synthesize sentences that perfectly align with the Good Dictionary Example (GDEX) framework.
 
@@ -54,13 +57,13 @@ After the analysis, provide the sentences within an <example_sentences> block.""
     # This format plugs directly into Mistral's apply_chat_template!
     return [
         {"role": "system", "content": system_instruction},
-        {"role": "user", "content": user_prompt}
+        {"role": "user", "content": user_prompt},
     ]
 
 
 if __name__ == "__main__":
     word = input("Enter target word: ")
-    
+
     try:
         messages = generate_prompt_from_fetched_data(word)
         print("\nGenerated Few-Shot Messages for Mistral:\n")
