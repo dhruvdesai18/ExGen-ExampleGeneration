@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from src.exgen.config import BaseGenerationConfig, BaselineGenerationConfig, AugmentedGenerationConfig
+from src.exgen.generation.augmented import AugmentedGenerator
 from src.exgen.generation.baseline import BaselineGenerator
 from src.exgen.models.base import Model
 from src.exgen.retrieval.fetcher import Fetcher
@@ -27,7 +28,7 @@ class Orchestrator:
                 fetcher=self.fetcher,
                 num_candidates=config.generation.num_candidates,
                 prompt_version=config.generation.prompt_version,
-                few_shot_count=config.generation.few_shot_count,
+                few_shot_examples=config.generation.few_shot_examples,
             )
 
-    ...
+        ...

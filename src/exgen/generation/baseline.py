@@ -9,8 +9,6 @@ from src.exgen.types import GeneratedExample, LexicalItem
 class BaselineGenerator:
     model: Model
     num_candidates: int
-    temperature: float
-    max_tokens: int
     prompt_version: str
 
     def generate(self, lexical_item: LexicalItem) -> list[GeneratedExample]:
@@ -19,14 +17,12 @@ class BaselineGenerator:
         outputs = self.model.generate(
             messages,
             num_candidates=self.num_candidates,
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
         )
 
         return [
             GeneratedExample(
                 id=str(uuid4()),
-                lexical_item_id=lexical_item.item_id,
+                lexical_item=lexical_item,
                 example_text=text,
                 metadata={
                     "model_name": self.model.name,

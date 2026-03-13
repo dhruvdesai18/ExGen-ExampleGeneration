@@ -11,15 +11,15 @@ class LexicalItem(BaseModel):
 
 class GeneratedExample(BaseModel):
     id: str
-    request_id: str
-    lexical_item_id: str
+    # request_id: str
+    lexical_item: LexicalItem
     example_text: str
     metadata: dict[str, Any] = Field(default_factory=dict)
     quality_scores: dict[str,float] = Field(default_factory=dict)
 
 class RetrievedExample(BaseModel):
     id: str
-    lexical_item_id: str
+    lexical_item: LexicalItem
     example_text: str
     metadata: dict[str, Any] = Field(default_factory=dict)
     source_name: str
