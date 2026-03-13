@@ -96,5 +96,5 @@ trainer = SFTTrainer(
 trainer.train()
 
 # Save the trained LoRA adapter and tokeniser
-peft_model.save_pretrained("exgen-qlora")
-tokeniser.save_pretrained("exgen-qlora")
+peft_model.save_pretrained("exgen-qlora-adapter")
+tokeniser.save_pretrained("exgen-qlora-adapter")
