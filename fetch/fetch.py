@@ -3,6 +3,7 @@
 import json
 import pandas as pd
 import requests
+import time
 
 
 # Fetch word data from the API
@@ -50,10 +51,9 @@ def load_dictionary(filepath):
 
 # Main function to iterate over dictionary.csv and fetch examples
 if __name__ == "__main__":
-    import time
 
-    dictionary_file = "dictionary.csv"
-    output_file = "examples.jsonl"
+    dictionary_file = "data/dictionary.csv"
+    output_file = "data/examples.jsonl"
 
     df = load_dictionary(dictionary_file)
     languages = list(df.columns)
@@ -82,6 +82,6 @@ if __name__ == "__main__":
                 print(f"HTTP error: {e}")
             except Exception as e:
                 print(f"error: {e}")
-            time.sleep(0.1)  # delay between API calls
+            # time.sleep(0.1)  # delay between API calls
 
     print(f"\nCompleted. All examples saved to {output_file}")

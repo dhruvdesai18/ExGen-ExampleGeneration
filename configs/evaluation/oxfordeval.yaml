@@ -1,0 +1,3 @@
+name: oxfordeval
+prompt_version: oxfordeval_v1
+randomize_order: true

@@ -17,7 +17,7 @@ base_model = Mistral3ForConditionalGeneration.from_pretrained(
 tokeniser = MistralCommonBackend.from_pretrained(base_model_id)
 
 # Load the dataset
-dataset = load_dataset("json", data_files="examples.jsonl", split="train")
+dataset = load_dataset("json", data_files="data/examples.jsonl", split="train")
 
 
 # Format the dataset
