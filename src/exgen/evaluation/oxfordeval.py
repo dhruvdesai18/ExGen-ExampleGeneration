@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import json
 import random
-import uuid
 from pathlib import Path
 from typing import Any
 
-from exgen.config import load_oxford_evaluation_config
+from exgen.config import OxfordEvaluationConfig
 from exgen.evaluation.base import Evaluator
 from exgen.evaluation.verifier import GeminiVerifier
-from exgen.types import GeneratedExample, EvaluationRecord
+from exgen.types import EvaluationOutcome, GeneratedExample
 
 PROMPTS_ROOT = Path(__file__).resolve().parent / "prompts"
 
@@ -17,12 +16,12 @@ PROMPTS_ROOT = Path(__file__).resolve().parent / "prompts"
 class OxfordEvalEvaluator(Evaluator):
     metric_name = "oxfordeval"
 
-    def __init__(self) -> None:
-        self.verifier = GeminiVerifier()
-        self.config = load_oxford_evaluation_config()
+    def __init__(self, config: OxfordEvaluationConfig) -> None:
+        self.config = config
+        self.verifier = GeminiVerifier(model_name=config.judge_model_name)
         self.rng = random.Random()
 
-    def evaluate(self, example: GeneratedExample) -> EvaluationRecord:
+    def evaluate(self, example: GeneratedExample) -> EvaluationOutcome:
         lexical_item = example.lexical_item
 
         generated_first = (
@@ -54,19 +53,24 @@ class OxfordEvalEvaluator(Evaluator):
 
         generated_wins = parsed["preferred"] == generated_label
 
-        return EvaluationRecord(
-            id=str(uuid.uuid4()),
-            metric_name=self.metric_name,
-            lexical_item_id=lexical_item.id,
-            metadata={
-                "score": 1.0 if generated_wins else 0.0,
+        return EvaluationOutcome(
+            score=1.0 if generated_wins else 0.0,
+            result={
                 "preferred": parsed["preferred"],
                 "confidence": parsed["confidence"],
                 "reason": parsed["reason"],
+            },
+            metadata={
                 "generated_first": generated_first,
                 "generated_label": generated_label,
                 "sentence_a": sentence_a,
                 "sentence_b": sentence_b,
+            },
+            provenance={
+                "metric_name": self.metric_name,
+                "metric_config_name": self.config.name,
+                "metric_prompt_version": self.config.prompt_version,
+                "judge_model": self.verifier.model_name,
             },
         )
 

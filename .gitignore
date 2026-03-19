@@ -6,3 +6,5 @@ exgen-qlora
 exgen-qlora-checkpoint
 .idea
 .cursor
+__pycache__/
+data/outputs/

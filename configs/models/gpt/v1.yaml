@@ -1,4 +1,5 @@
 name: gpt
 model_id: gpt-5
 max_tokens: 128
+temperature: 0.0
 timeout_seconds: 60

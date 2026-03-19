@@ -10,25 +10,24 @@ from exgen.types import GeneratedExample
 
 @dataclass
 class Orchestrator:
-    run_id: str
-
     model: Model
     fetcher: Fetcher
 
-    def generate(self, config: BaseGenerationConfig) -> GeneratedExample:
-        if isinstance(config.generation, BaselineGenerationConfig):
+    def generate(self, config: BaseGenerationConfig, lexical_item) -> list[GeneratedExample]:
+        if isinstance(config, BaselineGenerationConfig):
             generator = BaselineGenerator(
                 model=self.model,
-                num_candidates=config.generation.num_candidates,
-                prompt_version=config.generation.prompt_version,
+                num_candidates=config.num_candidates,
+                prompt_version=config.prompt_version,
             )
-        elif isinstance(config.generation, AugmentedGenerationConfig):
+        elif isinstance(config, AugmentedGenerationConfig):
             generator = AugmentedGenerator(
                 model=self.model,
                 fetcher=self.fetcher,
-                num_candidates=config.generation.num_candidates,
-                prompt_version=config.generation.prompt_version,
-                few_shot_examples=config.generation.few_shot_examples,
+                num_candidates=config.num_candidates,
+                prompt_version=config.prompt_version,
+                few_shot_examples=str(config.few_shot_count),
             )
-
-        ...
+        else:
+            raise ValueError(f"Unsupported generation config: {type(config).__name__}")
+        return generator.generate(lexical_item)

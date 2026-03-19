@@ -1,6 +1,0 @@
-metric_name: gdex
-prompt_version: gdex_v1
-criteria:
-  - typical
-  - informative
-  - intelligible

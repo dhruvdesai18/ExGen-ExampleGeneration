@@ -1,3 +1,4 @@
 name: oxfordeval
 prompt_version: oxfordeval_1
 randomize_order: true
+judge_model_name: gemini-2.5-flash

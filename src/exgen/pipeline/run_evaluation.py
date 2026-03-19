@@ -1,37 +1,64 @@
 from __future__ import annotations
 
-from exgen.evaluation.oxfordeval import OxfordEvalEvaluator
-from exgen.types import GeneratedExample, LexicalItem
+import argparse
+
+from exgen.config import ResolvedRunConfig, build_run_context, load_run_config
+from exgen.pipeline.factories import create_evaluator
+from exgen.pipeline.records import build_evaluation_record, generation_record_to_example
+from exgen.storage import (
+    load_generation_records,
+    persist_evaluation_record,
+    reset_output_file,
+)
+from exgen.types import EvaluationRecord, GenerationRecord, RunContext
 
 
-def build_mock_generated_example() -> GeneratedExample:
-    lexical_item = LexicalItem(
-        id="lex-001",
-        language="english",
-        word="balance",
-        pos="verb",
-        definition="to keep or put something in a steady position so that it does not fall",
-        source="mock",
+class EvaluationPipeline:
+    def run(
+        self,
+        config: ResolvedRunConfig,
+        context: RunContext,
+        generation_records: list[GenerationRecord] | None = None,
+    ) -> list[EvaluationRecord]:
+        source_records = generation_records or load_generation_records(context.artifacts.generation_path)
+        reset_output_file(context.artifacts.evaluation_path)
+        evaluators = [
+            (evaluation_config, create_evaluator(evaluation_config))
+            for evaluation_config in config.evaluations
+        ]
+
+        records: list[EvaluationRecord] = []
+        for generation_record in source_records:
+            example = generation_record_to_example(generation_record)
+            for evaluation_config, evaluator in evaluators:
+                outcome = evaluator.evaluate(example)
+                record = build_evaluation_record(
+                    context=context,
+                    evaluation_config=evaluation_config,
+                    generation_record=generation_record,
+                    outcome=outcome,
+                )
+                persist_evaluation_record(record, context.artifacts.evaluation_path)
+                records.append(record)
+        return records
+
+
+def run_evaluation(run_config: str) -> None:
+    config = load_run_config(run_config)
+    context = build_run_context(config)
+    records = EvaluationPipeline().run(config, context)
+    print(f"Evaluated {len(records)} records into {context.artifacts.evaluation_path}")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--run-config",
+        help="Run config version key or path.",
     )
-    return GeneratedExample(
-        id="gen-001",
-        lexical_item=lexical_item,
-        example_text="She balanced the tray carefully while walking to the table.",
-        metadata={
-            "model_name": "mock-generator",
-            "generator_type": "baseline",
-        },
-    )
-
-
-def run_evaluation() -> None:
-    evaluator = OxfordEvalEvaluator()
-
-    generated_example = build_mock_generated_example()
-    record = evaluator.evaluate(generated_example)
-
-    print(record.model_dump_json(indent=2))
+    args = parser.parse_args()
+    run_evaluation(args.run_config)
 
 
 if __name__ == "__main__":
-    run_evaluation()
+    main()

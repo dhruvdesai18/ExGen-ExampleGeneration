@@ -1,0 +1,6 @@
+name: gdex
+prompt_version: gdex_1
+criteria:
+  - typical
+  - informative
+  - intelligible

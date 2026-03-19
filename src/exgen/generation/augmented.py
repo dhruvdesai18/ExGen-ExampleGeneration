@@ -29,8 +29,7 @@ class AugmentedGenerator:
                 lexical_item=lexical_item,
                 example_text=text,
                 metadata={
-                    "model_name": self.model.name,
-                    "generator_type": "baseline",
+                    "generator_type": "augmented",
                 },
             )
             for text in outputs
@@ -40,7 +39,6 @@ class AugmentedGenerator:
         # TODO: use prompt_version to extract the needed prompt
         # TODO: use example Fetcher
 
-        item = lexical_item.lexical_item
         return [
             {
                 "role": "system",
@@ -49,10 +47,10 @@ class AugmentedGenerator:
             {
                 "role": "user",
                 "content": (
-                    f"Language: {item.language}\n"
-                    f"Word: {item.word}\n"
-                    f"Part of speech: {item.pos}\n"
-                    f"Definition: {item.definition}\n"
+                    f"Language: {lexical_item.language}\n"
+                    f"Word: {lexical_item.word}\n"
+                    f"Part of speech: {lexical_item.pos}\n"
+                    f"Definition: {lexical_item.definition}\n"
                     "Generate one natural sentence."
                 ),
             },
