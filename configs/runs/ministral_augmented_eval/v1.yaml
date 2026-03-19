@@ -12,6 +12,7 @@ versions:
   retrieval: default/v1
   evaluations:
     - oxfordeval/v1
+    - gdex/v1
 
 output:
   root_dir: data/outputs/runs/ministral_augmented_eval_v1

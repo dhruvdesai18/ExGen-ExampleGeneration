@@ -11,6 +11,7 @@ from exgen.config import (
     RetrievalConfig,
 )
 from exgen.evaluation.base import Evaluator
+from exgen.evaluation.gdex import GdexEvaluator
 from exgen.evaluation.oxfordeval import OxfordEvalEvaluator
 from exgen.generation.augmented import AugmentedGenerator
 from exgen.generation.baseline import BaselineGenerator
@@ -66,7 +67,7 @@ def create_evaluator(config: EvaluationConfig) -> Evaluator:
     if isinstance(config, OxfordEvaluationConfig):
         return OxfordEvalEvaluator(config)
     if isinstance(config, GdexEvaluationConfig):
-        raise NotImplementedError("GDEX evaluator is not implemented yet.")
+        return GdexEvaluator(config)
     if isinstance(config, ReadabilityEvaluationConfig):
         raise NotImplementedError("Readability evaluator is not implemented yet.")
     raise ValueError(f"Unsupported evaluation config '{type(config).__name__}'.")

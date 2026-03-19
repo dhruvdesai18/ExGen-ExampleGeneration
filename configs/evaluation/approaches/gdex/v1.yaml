@@ -1,5 +1,6 @@
 name: gdex
 prompt_version: gdex_1
+judge_model_name: gemini-2.5-flash
 criteria:
   - typical
   - informative

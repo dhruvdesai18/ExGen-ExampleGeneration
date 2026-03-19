@@ -62,6 +62,7 @@ class OxfordEvaluationConfig(BaseEvaluationConfig):
 class GdexEvaluationConfig(BaseEvaluationConfig):
     """GDEX rubric configuration."""
     criteria: list[str]
+    judge_model_name: str
 
 
 class ReadabilityEvaluationConfig(BaseEvaluationConfig):
