@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from src.exgen.types import EvaluationRecord, GeneratedExample
+from exgen.types import EvaluationRecord, GeneratedExample
 
 
 class Evaluator(ABC):

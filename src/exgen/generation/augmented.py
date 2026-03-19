@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from uuid import uuid4
 
-from src.exgen.models.base import Model
-from src.exgen.types import GeneratedExample, LexicalItem
-from src.exgen.retrieval.fetcher import Fetcher
+from exgen.models.base import Model
+from exgen.types import GeneratedExample, LexicalItem
+from exgen.retrieval.fetcher import Fetcher
 
 
 @dataclass

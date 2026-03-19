@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from src.exgen.evaluation.oxfordeval import OxfordEvalEvaluator
-from src.exgen.evaluation.verifier import GeminiVerifier
-from src.exgen.types import GeneratedExample, LexicalItem
+from exgen.evaluation.oxfordeval import OxfordEvalEvaluator
+from exgen.types import GeneratedExample, LexicalItem
 
 
 def build_mock_generated_example() -> GeneratedExample:
@@ -26,8 +25,7 @@ def build_mock_generated_example() -> GeneratedExample:
 
 
 def run_evaluation() -> None:
-    verifier = GeminiVerifier()
-    evaluator = OxfordEvalEvaluator(verifier=verifier)
+    evaluator = OxfordEvalEvaluator()
 
     generated_example = build_mock_generated_example()
     record = evaluator.evaluate(generated_example)

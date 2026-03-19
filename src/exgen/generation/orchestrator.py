@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
-from src.exgen.config import BaseGenerationConfig, BaselineGenerationConfig, AugmentedGenerationConfig
-from src.exgen.generation.augmented import AugmentedGenerator
-from src.exgen.generation.baseline import BaselineGenerator
-from src.exgen.models.base import Model
-from src.exgen.retrieval.fetcher import Fetcher
-from src.exgen.types import GeneratedExample
+from exgen.config import BaseGenerationConfig, BaselineGenerationConfig, AugmentedGenerationConfig
+from exgen.generation.augmented import AugmentedGenerator
+from exgen.generation.baseline import BaselineGenerator
+from exgen.models.base import Model
+from exgen.retrieval.fetcher import Fetcher
+from exgen.types import GeneratedExample
 
 
 @dataclass

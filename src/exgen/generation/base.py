@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from src.exgen.types import GenerationRequest, GeneratedExample
+from exgen.types import GenerationRequest, GeneratedExample
 
 
 class Generator(ABC):
