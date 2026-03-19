@@ -20,6 +20,7 @@ class EvaluationPipeline:
         context: RunContext,
         generation_records: list[GenerationRecord] | None = None,
     ) -> list[EvaluationRecord]:
+        """Evaluate generated examples and persist normalized result rows."""
         source_records = generation_records or load_generation_records(context.artifacts.generation_path)
         reset_output_file(context.artifacts.evaluation_path)
         evaluators = [
@@ -44,6 +45,7 @@ class EvaluationPipeline:
 
 
 def run_evaluation(run_config: str) -> None:
+    """Load the run config, execute evaluation, and report the output location."""
     config = load_run_config(run_config)
     context = build_run_context(config)
     records = EvaluationPipeline().run(config, context)
@@ -51,6 +53,7 @@ def run_evaluation(run_config: str) -> None:
 
 
 def main() -> None:
+    """Parse command-line arguments for the standalone evaluation entrypoint."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--run-config",

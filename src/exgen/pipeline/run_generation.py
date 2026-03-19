@@ -17,6 +17,7 @@ class GenerationPipeline:
         context: RunContext,
         lexical_items: list[LexicalItem],
     ) -> list[GenerationRecord]:
+        """Generate example sentences and persist the raw generation rows."""
         model = create_model(config.model)
         fetcher = create_fetcher(config.retrieval)
         generator = create_generator(config.generator, model, fetcher)
@@ -33,6 +34,7 @@ class GenerationPipeline:
 
 
 def run_generation(run_config: str) -> None:
+    """Load the run config, execute generation, and report the output location."""
     config = load_run_config(run_config)
     context = build_run_context(config)
     lexical_items = load_lexical_items(context.dataset_path)
@@ -41,6 +43,7 @@ def run_generation(run_config: str) -> None:
 
 
 def main() -> None:
+    """Parse command-line arguments for the standalone generation entrypoint."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--run-config",

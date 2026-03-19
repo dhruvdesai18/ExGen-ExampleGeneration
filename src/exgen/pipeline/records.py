@@ -15,6 +15,7 @@ from exgen.types import (
 
 
 def lexical_item_snapshot(lexical_item: LexicalItem) -> LexicalItemSnapshot:
+    """Build a compact lexical snapshot for persistence and analysis."""
     return LexicalItemSnapshot(
         language=lexical_item.language,
         word=lexical_item.word,
@@ -27,6 +28,7 @@ def build_generation_record(
     context: RunContext,
     example: GeneratedExample,
 ) -> GenerationRecord:
+    """Normalize a generated example into the persisted generation row shape."""
     return GenerationRecord(
         run_id=context.run_id,
         generated_example_id=example.id,
@@ -38,6 +40,7 @@ def build_generation_record(
 
 
 def generation_record_to_example(record: GenerationRecord) -> GeneratedExample:
+    """Rehydrate a persisted generation row back into the in-memory example shape."""
     lexical_item = LexicalItem(
         id=record.lexical_item_id,
         language=record.lexical_item.language,
@@ -60,6 +63,7 @@ def build_evaluation_record(
     generation_record: GenerationRecord,
     outcome: EvaluationOutcome,
 ) -> EvaluationRecord:
+    """Combine run context, generation linkage, and evaluator output into one normalized result row."""
     return EvaluationRecord(
         id=str(uuid.uuid4()),
         run_id=context.run_id,

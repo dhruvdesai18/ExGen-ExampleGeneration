@@ -9,6 +9,7 @@ from exgen.types import LexicalItem, RunContext, RunManifest
 
 class FullPipeline:
     def __init__(self) -> None:
+        """Wire the generation and evaluation stages into one orchestrator."""
         self.generation_pipeline = GenerationPipeline()
         self.evaluation_pipeline = EvaluationPipeline()
 
@@ -18,6 +19,7 @@ class FullPipeline:
         context: RunContext,
         lexical_items: list[LexicalItem],
     ) -> RunManifest:
+        """Build the manifest, run both stages, and return the run-level artifact description."""
         manifest = RunManifest(
             run_id=context.run_id,
             pipeline_mode="full",
