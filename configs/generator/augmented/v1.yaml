@@ -1,4 +1,4 @@
 type: augmented
 prompt_version: augmented_v1
 num_candidates: 5
-few_show_examples: 3
+few_shot_count: 3

@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from uuid import uuid4
 
-from src.exgen.models.base import Model
-from src.exgen.types import GeneratedExample, LexicalItem
+from exgen.models.base import Model
+from exgen.types import GeneratedExample, LexicalItem
 
 
 @dataclass
@@ -34,8 +34,6 @@ class BaselineGenerator:
 
     def _build_prompt(self, lexical_item: LexicalItem) -> list[dict[str, str]]:
         # TODO: use prompt_version to extract the needed prompt
-
-        item = lexical_item.lexical_item
         return [
             {
                 "role": "system",
@@ -44,10 +42,10 @@ class BaselineGenerator:
             {
                 "role": "user",
                 "content": (
-                    f"Language: {item.language}\n"
-                    f"Word: {item.word}\n"
-                    f"Part of speech: {item.pos}\n"
-                    f"Definition: {item.definition}\n"
+                    f"Language: {lexical_item.language}\n"
+                    f"Word: {lexical_item.word}\n"
+                    f"Part of speech: {lexical_item.pos}\n"
+                    f"Definition: {lexical_item.definition}\n"
                     "Generate one natural sentence."
                 ),
             },

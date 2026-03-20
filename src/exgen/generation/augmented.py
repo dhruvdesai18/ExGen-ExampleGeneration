@@ -3,9 +3,9 @@ import random
 from dataclasses import dataclass
 from uuid import uuid4
 
-from src.exgen.models.base import Model
-from src.exgen.types import GeneratedExample, LexicalItem
-from src.exgen.retrieval.fetcher import Fetcher
+from exgen.models.base import Model
+from exgen.types import GeneratedExample, LexicalItem
+from exgen.retrieval.fetcher import Fetcher
 
 
 @dataclass
@@ -33,7 +33,7 @@ class AugmentedGenerator:
                 metadata={
                     "model_name": self.model.name,
                     # FIX: Changed this from "baseline" to "augmented" so tracking works!
-                    "generator_type": "augmented", 
+                    "generator_type": "augmented",
                     "prompt_version": self.prompt_version,
                 },
             )
@@ -48,7 +48,7 @@ class AugmentedGenerator:
         # -----------------------------------------------------------------
 
         fetched_data = self.fetcher.fetch(item.word)
-        
+
         # Pick up to 3 random examples for variety
         if fetched_data:
             shots = random.sample(fetched_data, min(3, len(fetched_data)))

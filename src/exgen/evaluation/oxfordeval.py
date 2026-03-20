@@ -2,46 +2,40 @@ from __future__ import annotations
 
 import json
 import random
-import uuid
+from pathlib import Path
+from typing import Any
 
-from src.exgen.evaluation.base import Evaluator, Verifier
-from src.exgen.types import GeneratedExample, EvaluationRecord
+from exgen.config import OxfordEvaluationConfig
+from exgen.evaluation.base import Evaluator
+from exgen.evaluation.verifier import GeminiVerifier
+from exgen.types import EvaluationOutcome, GeneratedExample
 
-
-class MockExampleBuilder:
-    def build(self, example: GeneratedExample) -> str:
-        lexical_item = example.lexical_item
-        return (
-            f"The word {lexical_item.word} appears in an everyday sentence "
-            f"about {lexical_item.definition.lower()}."
-        )
+PROMPTS_ROOT = Path(__file__).resolve().parent / "prompts"
 
 
 class OxfordEvalEvaluator(Evaluator):
     metric_name = "oxfordeval"
 
-    def __init__(
-        self,
-        verifier: Verifier,
-        mock_builder: MockExampleBuilder | None = None,
-        seed: int = 42,
-    ) -> None:
-        self.verifier = verifier
-        self.mock_builder = mock_builder or MockExampleBuilder()
-        self.rng = random.Random(seed)
+    def __init__(self, config: OxfordEvaluationConfig) -> None:
+        self.config = config
+        self.verifier = GeminiVerifier(model_name=config.judge_model_name)
+        self.rng = random.Random()
 
-    def evaluate(self, example: GeneratedExample) -> EvaluationRecord:
+    def evaluate(self, example: GeneratedExample) -> EvaluationOutcome:
         lexical_item = example.lexical_item
-        mock_example = self.mock_builder.build(example)
 
-        generated_first = self.rng.choice([True, False])
+        generated_first = (
+            self.rng.choice([True, False])
+            if self.config.randomize_order
+            else True
+        )
 
         if generated_first:
             sentence_a = example.example_text
-            sentence_b = mock_example
+            sentence_b = "Example sentence to change"
             generated_label = "A"
         else:
-            sentence_a = mock_example
+            sentence_a = "Example sentence to change"
             sentence_b = example.example_text
             generated_label = "B"
 
@@ -59,51 +53,55 @@ class OxfordEvalEvaluator(Evaluator):
 
         generated_wins = parsed["preferred"] == generated_label
 
-        return EvaluationRecord(
-            id=str(uuid.uuid4()),
-            metric_name=self.metric_name,
-            lexical_item_id=lexical_item.id,
-            metadata={
-                "score": 1.0 if generated_wins else 0.0,
+        return EvaluationOutcome(
+            score=1.0 if generated_wins else 0.0,
+            result={
                 "preferred": parsed["preferred"],
                 "confidence": parsed["confidence"],
                 "reason": parsed["reason"],
+            },
+            metadata={
                 "generated_first": generated_first,
                 "generated_label": generated_label,
                 "sentence_a": sentence_a,
                 "sentence_b": sentence_b,
             },
+            provenance={
+                "metric_name": self.metric_name,
+                "metric_config_name": self.config.name,
+                "metric_prompt_version": self.config.prompt_version,
+                "judge_model": self.verifier.model_name,
+            },
         )
 
     def _build_system_prompt(self) -> str:
-        return (
-            "You are an expert lexicographer evaluating example sentences for a "
-            "language learning dictionary. Decide which sentence is the better "
-            "dictionary example for the given word sense. Return only JSON."
-        )
+        return (self._prompt_dir() / "system.txt").read_text(encoding="utf-8")
 
     def _build_user_prompt(
-        self,
-        *,
-        word: str,
-        pos: str,
-        definition: str,
-        sentence_a: str,
-        sentence_b: str,
+            self,
+            *,
+            word: str,
+            pos: str,
+            definition: str,
+            sentence_a: str,
+            sentence_b: str,
     ) -> str:
-        return (
-            f"Headword: {word}\n"
-            f"Part of speech: {pos}\n"
-            f"Definition: {definition}\n\n"
-            f"Sentence A: {sentence_a}\n"
-            f"Sentence B: {sentence_b}\n\n"
-            "Return JSON in this exact shape:\n"
-            '{'
-            '"preferred": "A" or "B", '
-            '"confidence": "high" or "medium" or "low", '
-            '"reason": "short explanation"'
-            '}'
-        )
+        template = (self._prompt_dir() / "user.txt").read_text(encoding="utf-8")
+        replacements = {
+            "word": word,
+            "pos": pos,
+            "definition": definition,
+            "sentence_a": sentence_a,
+            "sentence_b": sentence_b,
+        }
+
+        for key, value in replacements.items():
+            template = template.replace(f"{{{{{key}}}}}", value)
+
+        return template
+
+    def _prompt_dir(self) -> Path:
+        return PROMPTS_ROOT / self.config.prompt_version
 
     def _parse_response(self, raw_response: str) -> dict[str, Any]:
         parsed = json.loads(raw_response)

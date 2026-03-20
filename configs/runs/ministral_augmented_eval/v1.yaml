@@ -1,0 +1,18 @@
+run:
+  run_id: ministral_augmented_eval_v1
+  seed: 42
+
+dataset:
+  split_path: data/processed/test_items.parquet
+  language: english
+
+versions:
+  model: ministral_qft/v1
+  generator: augmented/v1
+  retrieval: default/v1
+  evaluations:
+    - oxfordeval/v1
+    - gdex/v1
+
+output:
+  root_dir: data/outputs/runs/ministral_augmented_eval_v1

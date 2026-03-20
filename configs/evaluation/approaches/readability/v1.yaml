@@ -1,0 +1,4 @@
+name: readability
+measures:
+  - fkgl
+  - word_count

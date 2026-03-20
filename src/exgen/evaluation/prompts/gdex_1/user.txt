@@ -1,0 +1,23 @@
+Headword: {{word}}
+Part of speech: {{pos}}
+Definition: {{definition}}
+
+Sentence: {{sentence}}
+
+Rate this sentence on the following criteria: {{criteria_list}}.
+
+Respond with this exact JSON structure:
+{
+  "typical": {
+    "label": "yes" or "somewhat" or "no",
+    "reason": "Short explanation"
+  },
+  "informative": {
+    "label": "yes" or "somewhat" or "no",
+    "reason": "Short explanation"
+  },
+  "intelligible": {
+    "label": "yes" or "somewhat" or "no",
+    "reason": "Short explanation"
+  }
+}
