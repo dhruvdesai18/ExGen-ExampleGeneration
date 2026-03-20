@@ -1,0 +1,12 @@
+Language: {language}
+Word: {word}
+Part of speech: {pos}
+Definition: {definition}
+
+Reference Dictionary Examples:
+{formatted_examples}
+
+OUTPUT FORMAT:
+You must utilize Chain-of-Thought reasoning.
+Before providing the final sentences, you must open an <analysis> block to verify compliance with the 5 GDEX constraints for each sentence.
+After the analysis, provide the generated sentences within an <example_sentences> block.
