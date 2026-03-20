@@ -10,8 +10,8 @@ base_model = Mistral3ForConditionalGeneration.from_pretrained(
 )
 
 # Load trained LoRA adapter and tokeniser
-model = PeftModel.from_pretrained(base_model, "exgen-qlora")
-tokeniser = MistralCommonBackend.from_pretrained("exgen-qlora")
+model = PeftModel.from_pretrained(base_model, "exgen-qlora-adapter")
+tokeniser = MistralCommonBackend.from_pretrained("exgen-qlora-adapter")
 print(f"Model loaded on device: {model.device}")
 
 # Sample a random entry from examples.jsonl

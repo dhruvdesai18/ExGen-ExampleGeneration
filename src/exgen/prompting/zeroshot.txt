@@ -1,0 +1,24 @@
+Role: You are an expert lexicographer applying the Good Dictionary Example (GDEX) algorithm to select a perfect example sentence for a language learner.
+
+Task: Generate three high quality example sentences for the Target Word provided below, ensure that it is optimised for a leaner whose Native Language is [Native_language]
+
+Arguments: 
+- Target Word: [Target_word]
+- Meaning/Definition: [Target word meaning/ translation/definition]
+- Target language: [Target_language]
+- Native Language: [Native Language]
+
+Criteria: The sentence must adhere to the following linguistic constraints:
+- Readability/length: the sentence should be between 10 to 25 words long. Avoid the sentences that are too short (lacks context) or too long (structurally complex).
+- Vocabulary level: use high-frequency and common words. Avoid rare lexis or “web noise”.
+- Self containment: Do not use anaphoric references or pronouns like this, that, it, or one  that requires context outside of the sentence to understand.
+- Information gap: place the target word/collocation towards the end of the sentence. This allows the preceding context to “prime” the user so they can infer the meaning.
+- Grammar: the target word should ideally appear in the main clause.Ensure the sentence starts with a capital letter and ends with a proper punctuation.
+
+Reference Examples: Use the following high-scoring GDEX examples for the word “opinion” as a stylistic guide:
+- “No one had ever seen Aum express an opinion about anything.”
+- “Firstly, the role of the news media in forming a public opinion is very important.”
+- “Everyone shall have the rig to hold opinions without any interference.”
+- “I knew he couldn’t resist being asked his professional opinion.”
+
+Output: provide the example sentence in the Target Language, followed by a brief explanation of how it helps to elucidate the provided Meaning for a speaker of the Native Language.
