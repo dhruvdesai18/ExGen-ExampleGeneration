@@ -12,13 +12,18 @@ src/exgen.egg-info/top_level.txt
 src/exgen/datasets/loader.py
 src/exgen/datasets/splits.py
 src/exgen/evaluation/base.py
+src/exgen/evaluation/gdex.py
 src/exgen/evaluation/oxfordeval.py
+src/exgen/evaluation/readability.py
 src/exgen/evaluation/verifier.py
+src/exgen/finetuning/finetune.py
 src/exgen/generation/augmented.py
 src/exgen/generation/base.py
 src/exgen/generation/baseline.py
 src/exgen/generation/orchestrator.py
 src/exgen/generation/ranking.py
+src/exgen/inference/exgen_qlora_inference.py
+src/exgen/inference/quantised_inference.py
 src/exgen/models/base.py
 src/exgen/models/gpt.py
 src/exgen/models/ministral_qft.py
@@ -28,4 +33,8 @@ src/exgen/pipeline/records.py
 src/exgen/pipeline/run_evaluation.py
 src/exgen/pipeline/run_full.py
 src/exgen/pipeline/run_generation.py
+src/exgen/prompting/few_shot_generator.py
+src/exgen/quantisation/quantise_gemma.py
+src/exgen/quantisation/quantise_ministral.py
+src/exgen/retrieval/fetch.py
 src/exgen/retrieval/fetcher.py
