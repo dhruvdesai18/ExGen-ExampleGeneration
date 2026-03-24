@@ -17,6 +17,7 @@ src/exgen/evaluation/oxfordeval.py
 src/exgen/evaluation/readability.py
 src/exgen/evaluation/verifier.py
 src/exgen/finetuning/finetune.py
+src/exgen/finetuning/hf_upload.py
 src/exgen/generation/augmented.py
 src/exgen/generation/base.py
 src/exgen/generation/baseline.py
