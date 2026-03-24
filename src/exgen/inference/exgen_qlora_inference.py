@@ -1,5 +1,6 @@
 import json
 import random
+import re
 
 from peft import PeftModel
 from transformers import Mistral3ForConditionalGeneration, MistralCommonBackend
@@ -49,8 +50,6 @@ output = model.generate(
 response = tokeniser.decode(output[len(input_ids) :], skip_special_tokens=True)
 
 # Extract example from tags
-if "<EXAMPLE>" in response and "</EXAMPLE>" in response:
-    example = response.split("<EXAMPLE>")[1].split("</EXAMPLE>")[0]
-else:
-    example = response.strip()
+match = re.search(r"<EXAMPLE>\s*(.*?)\s*</EXAMPLE>", response, flags=re.DOTALL)
+example = match.group(1).strip() if match else response.strip()
 print(f"\nGenerated Output:\n{example}")
