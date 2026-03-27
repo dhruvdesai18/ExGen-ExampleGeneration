@@ -17,10 +17,17 @@ from exgen.types import (
 def lexical_item_snapshot(lexical_item: LexicalItem) -> LexicalItemSnapshot:
     """Build a compact lexical snapshot for persistence and analysis."""
     return LexicalItemSnapshot(
+        id=lexical_item.id,
         language=lexical_item.language,
         word=lexical_item.word,
         pos=lexical_item.pos,
         definition=lexical_item.definition,
+        source=lexical_item.source,
+        sense=lexical_item.sense,
+        reference_sentence=lexical_item.reference_sentence,
+        reference_sentence_id=lexical_item.reference_sentence_id,
+        word_freq_rank=lexical_item.word_freq_rank,
+        sentence_count=lexical_item.sentence_count,
     )
 
 
@@ -42,12 +49,17 @@ def build_generation_record(
 def generation_record_to_example(record: GenerationRecord) -> GeneratedExample:
     """Rehydrate a persisted generation row back into the in-memory example shape."""
     lexical_item = LexicalItem(
-        id=record.lexical_item_id,
+        id=record.lexical_item.id or record.lexical_item_id,
         language=record.lexical_item.language,
         word=record.lexical_item.word,
         pos=record.lexical_item.pos,
         definition=record.lexical_item.definition,
-        source="persisted-generation",
+        source=record.lexical_item.source,
+        sense=record.lexical_item.sense,
+        reference_sentence=record.lexical_item.reference_sentence,
+        reference_sentence_id=record.lexical_item.reference_sentence_id,
+        word_freq_rank=record.lexical_item.word_freq_rank,
+        sentence_count=record.lexical_item.sentence_count,
     )
     return GeneratedExample(
         id=record.generated_example_id,

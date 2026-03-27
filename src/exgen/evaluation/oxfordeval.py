@@ -23,6 +23,11 @@ class OxfordEvalEvaluator(Evaluator):
 
     def evaluate(self, example: GeneratedExample) -> EvaluationOutcome:
         lexical_item = example.lexical_item
+        reference_sentence = lexical_item.reference_sentence
+        if not reference_sentence:
+            raise ValueError(
+                f"OxfordEval requires a reference sentence for lexical item '{lexical_item.id}'."
+            )
 
         generated_first = (
             self.rng.choice([True, False])
@@ -32,10 +37,10 @@ class OxfordEvalEvaluator(Evaluator):
 
         if generated_first:
             sentence_a = example.example_text
-            sentence_b = "Example sentence to change"
+            sentence_b = reference_sentence
             generated_label = "A"
         else:
-            sentence_a = "Example sentence to change"
+            sentence_a = reference_sentence
             sentence_b = example.example_text
             generated_label = "B"
 
@@ -65,6 +70,7 @@ class OxfordEvalEvaluator(Evaluator):
                 "generated_label": generated_label,
                 "sentence_a": sentence_a,
                 "sentence_b": sentence_b,
+                "reference_sentence_id": lexical_item.reference_sentence_id,
             },
             provenance={
                 "metric_name": self.metric_name,

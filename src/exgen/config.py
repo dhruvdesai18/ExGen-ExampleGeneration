@@ -19,6 +19,7 @@ class ModelConfig(BaseModel):
     model_id: str
     max_tokens: int
     temperature: float = 0.0
+    top_p: float = 1.0
     timeout_seconds: int | None = None
 
 
@@ -233,6 +234,7 @@ def build_run_context(config: ResolvedRunConfig) -> RunContext:
     artifacts = ArtifactPaths(
         root_dir=root_dir,
         generation_path=root_dir / "generations.jsonl",
+        selected_generation_path=root_dir / "selected_generations.jsonl",
         evaluation_path=root_dir / "evaluations.jsonl",
         manifest_path=root_dir / "manifest.json",
     )

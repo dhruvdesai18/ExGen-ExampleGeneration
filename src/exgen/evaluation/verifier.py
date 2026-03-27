@@ -3,8 +3,6 @@ from __future__ import annotations
 import os
 
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
 
 from exgen.evaluation.base import Verifier
 
@@ -24,9 +22,13 @@ class GeminiVerifier(Verifier):
                 "Gemini API key is missing. Set GEMINI_API_KEY or pass api_key explicitly."
             )
 
+        from google import genai
+
         self.client = genai.Client(api_key=self.api_key)
 
     def verify(self, system_prompt: str, user_prompt: str) -> str:
+        from google.genai import types
+
         response = self.client.models.generate_content(
             model=self.model_name,
             contents=user_prompt,

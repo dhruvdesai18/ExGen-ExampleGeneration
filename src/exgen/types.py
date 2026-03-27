@@ -1,7 +1,9 @@
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
+
 from pydantic import BaseModel, Field
+
 
 class LexicalItem(BaseModel):
     id: str
@@ -10,14 +12,20 @@ class LexicalItem(BaseModel):
     pos: str
     definition: str
     source: str
+    sense: str | None = None
+    reference_sentence: str | None = None
+    reference_sentence_id: str | None = None
+    word_freq_rank: int | None = None
+    sentence_count: int | None = None
+
 
 class GeneratedExample(BaseModel):
     id: str
-    # request_id: str
     lexical_item: LexicalItem
     example_text: str
     metadata: dict[str, Any] = Field(default_factory=dict)
-    quality_scores: dict[str,float] = Field(default_factory=dict)
+    quality_scores: dict[str, float] = Field(default_factory=dict)
+
 
 class RetrievedExample(BaseModel):
     id: str
@@ -33,15 +41,25 @@ class GenerationRequest(BaseModel):
     generation_type: Literal["baseline", "augmented"]
     run_id: str
 
+
 class LexicalItemSnapshot(BaseModel):
+    id: str
     language: str
     word: str
     pos: str
     definition: str
+    source: str
+    sense: str | None = None
+    reference_sentence: str | None = None
+    reference_sentence_id: str | None = None
+    word_freq_rank: int | None = None
+    sentence_count: int | None = None
+
 
 class ArtifactPaths(BaseModel):
     root_dir: Path
     generation_path: Path
+    selected_generation_path: Path
     evaluation_path: Path
     manifest_path: Path
 

@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 
-from exgen.types import GenerationRequest, GeneratedExample
+from exgen.types import GeneratedExample, LexicalItem
 
 
 class Generator(ABC):
     @abstractmethod
-    def generate(self, request: GenerationRequest) -> list[GeneratedExample]:
+    def generate(self, lexical_item: LexicalItem) -> list[GeneratedExample]:
         ...

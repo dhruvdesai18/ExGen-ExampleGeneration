@@ -1,55 +1,62 @@
-import json
-import random
-import re
+from __future__ import annotations
 
-from peft import PeftModel
-from transformers import Mistral3ForConditionalGeneration, MistralCommonBackend
+import argparse
 
-# Load base quantised model
-base_model = Mistral3ForConditionalGeneration.from_pretrained(
-    "Ministral-3-3B-Instruct-2512-bnb-nf4", device_map="auto"
-)
+from exgen.datasets.loader import load_lexical_items
+from exgen.generation.baseline import BaselineGenerator
+from exgen.models.ministral_qft import MinistralQFT
 
-# Load trained LoRA adapter and tokeniser
-model = PeftModel.from_pretrained(base_model, "exgen-qlora-adapter")
-tokeniser = MistralCommonBackend.from_pretrained("exgen-qlora-adapter")
-print(f"Model loaded on device: {model.device}")
 
-# Sample a random entry from examples.jsonl
-with open("data/examples.jsonl", "r", encoding="utf-8") as f:
-    entries = [json.loads(line) for line in f]
-entry = random.choice(entries)
+def run_inference(
+    *,
+    dataset_path: str,
+    row_index: int,
+    model_id: str,
+    adapter_path: str,
+    num_candidates: int,
+) -> None:
+    lexical_items = load_lexical_items(dataset_path)
+    lexical_item = lexical_items[row_index]
+    model = MinistralQFT(
+        name="ministral_qft",
+        temperature=0.7,
+        top_p=0.9,
+        max_tokens=128,
+        model_id=model_id,
+        adapter_path=adapter_path,
+    )
+    generator = BaselineGenerator(
+        model=model,
+        num_candidates=num_candidates,
+        prompt_version="baseline_v1",
+    )
+    print(
+        f"Target: {lexical_item.language} | {lexical_item.word} | {lexical_item.pos} | "
+        f"{lexical_item.definition}"
+    )
+    for example in generator.generate(lexical_item):
+        print(example.example_text)
 
-# Build prompt
-language = entry["language"]
-word = entry["word"]
-pos = entry["pos"]
-definition = entry["definition"]
-messages = [
-    {
-        "role": "user",
-        "content": (
-            "Generate an example sentence for this dictionary entry:\n"
-            f"<LANGUAGE>{language}</LANGUAGE>\n"
-            f"<WORD>{word}</WORD>\n"
-            f"<POS>{pos}</POS>\n"
-            f"<DEFINITION>{definition}</DEFINITION>"
-        ),
-    },
-]
-inputs = tokeniser.apply_chat_template(
-    messages, return_tensors="pt", return_dict=True, add_generation_prompt=True
-).to(model.device)
-input_ids = inputs["input_ids"][0]
-print(f"\nUser Prompt:\n{tokeniser.decode(input_ids, skip_special_tokens=False)}")
 
-# Generate
-output = model.generate(
-    **inputs, max_new_tokens=512, do_sample=True, temperature=0.7, top_p=0.9
-)[0]
-response = tokeniser.decode(output[len(input_ids) :], skip_special_tokens=True)
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--dataset-path",
+        default="data/create_data/final_dataset/sampled_best_3000.csv",
+    )
+    parser.add_argument("--row-index", type=int, default=0)
+    parser.add_argument("--model-id", default="Ministral-3-3B-Instruct-2512-bnb-nf4")
+    parser.add_argument("--adapter-path", default="exgen-qlora-adapter")
+    parser.add_argument("--num-candidates", type=int, default=1)
+    args = parser.parse_args()
+    run_inference(
+        dataset_path=args.dataset_path,
+        row_index=args.row_index,
+        model_id=args.model_id,
+        adapter_path=args.adapter_path,
+        num_candidates=args.num_candidates,
+    )
 
-# Extract example from tags
-match = re.search(r"<EXAMPLE>\s*(.*?)\s*</EXAMPLE>", response, flags=re.DOTALL)
-example = match.group(1).strip() if match else response.strip()
-print(f"\nGenerated Output:\n{example}")
+
+if __name__ == "__main__":
+    main()

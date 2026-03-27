@@ -3,8 +3,8 @@ run:
   seed: 42
 
 dataset:
-  split_path: data/processed/test_items.parquet
-  language: english
+  split_path: data/processed/eval_items.parquet
+  language: multilingual
 
 versions:
   model: ministral_qft/v1

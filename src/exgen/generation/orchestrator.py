@@ -26,7 +26,7 @@ class Orchestrator:
                 fetcher=self.fetcher,
                 num_candidates=config.num_candidates,
                 prompt_version=config.prompt_version,
-                few_shot_examples=str(config.few_shot_count),
+                few_shot_examples=config.few_shot_count,
             )
         else:
             raise ValueError(f"Unsupported generation config: {type(config).__name__}")

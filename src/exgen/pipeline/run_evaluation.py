@@ -21,7 +21,12 @@ class EvaluationPipeline:
         generation_records: list[GenerationRecord] | None = None,
     ) -> list[EvaluationRecord]:
         """Evaluate generated examples and persist normalized result rows."""
-        source_records = generation_records or load_generation_records(context.artifacts.generation_path)
+        source_records = generation_records or self._load_source_records(context)
+        selected_records = [
+            record
+            for record in source_records
+            if record.metadata.get("selected") is True
+        ]
         reset_output_file(context.artifacts.evaluation_path)
         evaluators = [
             (evaluation_config, create_evaluator(evaluation_config))
@@ -29,7 +34,7 @@ class EvaluationPipeline:
         ]
 
         records: list[EvaluationRecord] = []
-        for generation_record in source_records:
+        for generation_record in selected_records:
             example = generation_record_to_example(generation_record)
             for evaluation_config, evaluator in evaluators:
                 outcome = evaluator.evaluate(example)
@@ -42,6 +47,13 @@ class EvaluationPipeline:
                 persist_evaluation_record(record, context.artifacts.evaluation_path)
                 records.append(record)
         return records
+
+    @staticmethod
+    def _load_source_records(context: RunContext) -> list[GenerationRecord]:
+        selected_records = load_generation_records(context.artifacts.selected_generation_path)
+        if selected_records:
+            return selected_records
+        return load_generation_records(context.artifacts.generation_path)
 
 
 def run_evaluation(run_config: str) -> None:

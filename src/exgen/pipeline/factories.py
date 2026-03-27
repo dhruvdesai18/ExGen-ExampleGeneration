@@ -20,6 +20,7 @@ from exgen.models.base import Model
 from exgen.models.gpt import GPT
 from exgen.models.ministral_qft import MinistralQFT
 from exgen.retrieval.fetcher import Fetcher
+from exgen.types import RunContext
 
 
 def create_model(config: ModelConfig) -> Model:
@@ -27,6 +28,7 @@ def create_model(config: ModelConfig) -> Model:
         return GPT(
             name=config.name,
             temperature=config.temperature,
+            top_p=config.top_p,
             max_tokens=config.max_tokens,
             model_id=config.model_id,
             timeout_seconds=config.timeout_seconds,
@@ -35,15 +37,16 @@ def create_model(config: ModelConfig) -> Model:
         return MinistralQFT(
             name=config.name,
             temperature=config.temperature,
+            top_p=config.top_p,
             max_tokens=config.max_tokens,
             model_id=config.model_id,
         )
     raise ValueError(f"Unsupported model config '{config.name}'.")
 
 
-def create_fetcher(config: RetrievalConfig) -> Fetcher:
+def create_fetcher(config: RetrievalConfig, context: RunContext) -> Fetcher:
     _ = config
-    return Fetcher()
+    return Fetcher(dataset_path=context.dataset_path.parent / "train_examples.parquet")
 
 
 def create_generator(config, model: Model, fetcher: Fetcher):
@@ -59,7 +62,7 @@ def create_generator(config, model: Model, fetcher: Fetcher):
             fetcher=fetcher,
             num_candidates=config.num_candidates,
             prompt_version=config.prompt_version,
-            few_shot_examples=str(config.few_shot_count),
+            few_shot_examples=config.few_shot_count,
         )
     raise ValueError(f"Unsupported generation config '{type(config).__name__}'.")
 

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from typing import Iterator
 from abc import ABC, abstractmethod
+from typing import Iterator
 
 
 @dataclass
@@ -16,5 +16,4 @@ class Model(ABC):
         messages: list[dict[str, str]],
         num_candidates: int,
     ) -> Iterator[str]:
-        for i in range(num_candidates):
-            yield ...
+        raise NotImplementedError
