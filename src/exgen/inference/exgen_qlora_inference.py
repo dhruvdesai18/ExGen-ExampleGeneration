@@ -40,9 +40,15 @@ inputs = tokeniser.apply_chat_template(
     messages,
     return_tensors="pt",
     return_dict=True,
-    add_generation_prompt=False,
     continue_final_message=True,
 ).to(model.device)
+
+# Remove trailing EOS token
+eos_id = tokeniser.eos_token_id
+for key in inputs:
+    if inputs[key].shape[-1] > 0 and inputs[key][0, -1].item() == eos_id:
+        inputs[key] = inputs[key][:, :-1]
+
 input_ids = inputs["input_ids"][0]
 print(f"\nUser Prompt:\n{tokeniser.decode(input_ids, skip_special_tokens=False)}")
 

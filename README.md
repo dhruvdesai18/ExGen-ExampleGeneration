@@ -19,4 +19,6 @@
 ## Fine-tuning
 - Run `uv sync --extra gpu` first on a supported CUDA platform
 - Run `uv run python finetuning/finetune.py` to train the LoRA adapter for the quantised model
-- Host inference using transformers in `uv run python inference/qlora_inference.py`
+- Run tensorboard --logdir ./exgen-qlora-checkpoint/runs
+- Run sample inference with `uv run python inference/exgen_qlora_inference.py`
+- Full test split generation with `uv run python inference/full_qft_generation.py`

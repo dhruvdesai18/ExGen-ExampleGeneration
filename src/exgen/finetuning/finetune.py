@@ -2,6 +2,7 @@
 from transformers import (
     Mistral3ForConditionalGeneration,
     MistralCommonBackend,
+    EarlyStoppingCallback,
 )
 from datasets import load_dataset
 from peft import LoraConfig, get_peft_model, TaskType
@@ -81,15 +82,21 @@ training_args = SFTConfig(
     output_dir="./exgen-qlora-checkpoint",
     per_device_train_batch_size=4,
     gradient_accumulation_steps=4,
-    num_train_epochs=1,
-    learning_rate=2e-4,
+    num_train_epochs=5,
+    learning_rate=1e-4,
+    lr_scheduler_type="cosine",
+    warmup_ratio=0.05,
     bf16=True,
-    logging_steps=10,
     save_steps=50,
-    save_total_limit=1,
+    save_total_limit=3,
+    load_best_model_at_end=True,
+    metric_for_best_model="eval_loss",
+    greater_is_better=False,
     eval_strategy="steps",
     eval_steps=50,
-    report_to="none",
+    report_to="tensorboard",
+    logging_dir="./runs",
+    logging_steps=10,
     dataset_text_field="text",
     max_length=512,
 )
@@ -101,6 +108,7 @@ trainer = SFTTrainer(
     train_dataset=formatted_train_dataset,
     eval_dataset=formatted_eval_dataset,
     processing_class=tokeniser,
+    callbacks=[EarlyStoppingCallback(early_stopping_patience=3)],
 )
 trainer.train()
 
