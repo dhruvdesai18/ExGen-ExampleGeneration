@@ -25,6 +25,7 @@ src/exgen/generation/orchestrator.py
 src/exgen/generation/ranking.py
 src/exgen/inference/exgen_qlora_inference.py
 src/exgen/inference/quantised_inference.py
+src/exgen/mlm/mlm_metric.py
 src/exgen/models/base.py
 src/exgen/models/gpt.py
 src/exgen/models/ministral_qft.py
@@ -35,6 +36,7 @@ src/exgen/pipeline/run_evaluation.py
 src/exgen/pipeline/run_full.py
 src/exgen/pipeline/run_generation.py
 src/exgen/prompting/few_shot_generator.py
+src/exgen/quantisation/hf_upload.py
 src/exgen/quantisation/quantise_gemma.py
 src/exgen/quantisation/quantise_ministral.py
 src/exgen/retrieval/fetch.py

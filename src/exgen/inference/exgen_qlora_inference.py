@@ -1,7 +1,7 @@
-import json
 import random
 import re
 
+import pandas as pd
 from peft import PeftModel
 from transformers import Mistral3ForConditionalGeneration, MistralCommonBackend
 
@@ -15,31 +15,40 @@ model = PeftModel.from_pretrained(base_model, "exgen-qlora-adapter")
 tokeniser = MistralCommonBackend.from_pretrained("exgen-qlora-adapter")
 print(f"Model loaded on device: {model.device}")
 
-# Sample a random entry from examples.jsonl
-with open("data/examples.jsonl", "r", encoding="utf-8") as f:
-    entries = [json.loads(line) for line in f]
-entry = random.choice(entries)
+# Sample a random entry from the test set
+df = pd.read_parquet("data/test/test_items.parquet")
+entry = df.sample(n=1).iloc[0]
 
 # Build prompt
-language = entry["language"]
-word = entry["word"]
-pos = entry["pos"]
-definition = entry["definition"]
 messages = [
     {
         "role": "user",
         "content": (
             "Generate an example sentence for this dictionary entry:\n"
-            f"<LANGUAGE>{language}</LANGUAGE>\n"
-            f"<WORD>{word}</WORD>\n"
-            f"<POS>{pos}</POS>\n"
-            f"<DEFINITION>{definition}</DEFINITION>"
+            f"<LANGUAGE>{entry["language"]}</LANGUAGE>\n"
+            f"<WORD>{entry["word"]}</WORD>\n"
+            f"<POS>{entry["pos"]}</POS>\n"
+            f"<DEFINITION>{entry["definition"]}</DEFINITION>"
         ),
+    },
+    {
+        "role": "assistant",
+        "content": "<EXAMPLE>",
     },
 ]
 inputs = tokeniser.apply_chat_template(
-    messages, return_tensors="pt", return_dict=True, add_generation_prompt=True
+    messages,
+    return_tensors="pt",
+    return_dict=True,
+    continue_final_message=True,
 ).to(model.device)
+
+# Remove trailing EOS token
+eos_id = tokeniser.eos_token_id
+for key in inputs:
+    if inputs[key].shape[-1] > 0 and inputs[key][0, -1].item() == eos_id:
+        inputs[key] = inputs[key][:, :-1]
+
 input_ids = inputs["input_ids"][0]
 print(f"\nUser Prompt:\n{tokeniser.decode(input_ids, skip_special_tokens=False)}")
 
@@ -50,6 +59,6 @@ output = model.generate(
 response = tokeniser.decode(output[len(input_ids) :], skip_special_tokens=True)
 
 # Extract example from tags
-match = re.search(r"<EXAMPLE>\s*(.*?)\s*</EXAMPLE>", response, flags=re.DOTALL)
+match = re.search(r"(.*?)\s*</EXAMPLE>", response, flags=re.DOTALL)
 example = match.group(1).strip() if match else response.strip()
 print(f"\nGenerated Output:\n{example}")
