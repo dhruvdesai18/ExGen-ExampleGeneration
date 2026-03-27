@@ -16,8 +16,13 @@ base_model = Mistral3ForConditionalGeneration.from_pretrained(
 )
 tokeniser = MistralCommonBackend.from_pretrained(base_model_id)
 
-# Load the dataset
-dataset = load_dataset("json", data_files="data/examples.jsonl", split="train")
+# Load the datasets
+train_dataset = load_dataset(
+    "parquet", data_files="data/train/train_items.parquet", split="train"
+)
+eval_dataset = load_dataset(
+    "parquet", data_files="data/eval/eval_items.parquet", split="train"
+)
 
 
 # Format the dataset
@@ -35,7 +40,7 @@ def format_sample(sample):
         },
         {
             "role": "assistant",
-            "content": f"<EXAMPLE>{sample["example"]}</EXAMPLE>",
+            "content": f"<EXAMPLE>{sample["sentence"]}</EXAMPLE>",
         },
     ]
     return {
@@ -48,7 +53,8 @@ def format_sample(sample):
     }
 
 
-formatted_dataset = dataset.map(format_sample)
+formatted_train_dataset = train_dataset.map(format_sample)
+formatted_eval_dataset = eval_dataset.map(format_sample)
 
 # Lora Configuration
 lora_config = LoraConfig(
@@ -81,6 +87,8 @@ training_args = SFTConfig(
     logging_steps=10,
     save_steps=50,
     save_total_limit=1,
+    eval_strategy="steps",
+    eval_steps=50,
     report_to="none",
     dataset_text_field="text",
     max_length=512,
@@ -90,7 +98,8 @@ training_args = SFTConfig(
 trainer = SFTTrainer(
     model=peft_model,
     args=training_args,
-    train_dataset=formatted_dataset,
+    train_dataset=formatted_train_dataset,
+    eval_dataset=formatted_eval_dataset,
     processing_class=tokeniser,
 )
 trainer.train()
