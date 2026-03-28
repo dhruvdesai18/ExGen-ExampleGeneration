@@ -17,6 +17,7 @@ trl>=0.29.0
 huggingface-hub>=1.7.1
 tensorboard>=2.20.0
 setuptools==81.0.0
+tqdm>=4.67.3
 
 [gpu]
 

@@ -3,7 +3,7 @@ run:
   seed: 42
 
 dataset:
-  split_path: data/processed/eval_items.parquet
+  split_path: data/processed/test_items.parquet
   language: multilingual
 
 versions:
@@ -16,3 +16,6 @@ versions:
 
 output:
   root_dir: data/outputs/runs/ministral_augmented_eval_v1
+
+evaluation:
+  max_items_per_language: 10

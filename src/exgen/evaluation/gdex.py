@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any
 
 from exgen.config import GdexEvaluationConfig
 from exgen.evaluation.base import Evaluator
+from exgen.evaluation.json_utils import parse_llm_json
 from exgen.evaluation.verifier import GeminiVerifier
 from exgen.types import EvaluationOutcome, GeneratedExample
 
@@ -35,7 +35,11 @@ class GdexEvaluator(Evaluator):
             sentence=example.example_text,
         )
 
-        raw_response = self.verifier.verify(system_prompt, user_prompt)
+        raw_response = self.verifier.verify(
+            system_prompt,
+            user_prompt,
+            response_schema=self._response_schema(),
+        )
         parsed = self._parse_response(raw_response)
         criterion_scores = {
             criterion: CRITERION_SCORES[parsed[criterion]["label"]]
@@ -95,9 +99,32 @@ class GdexEvaluator(Evaluator):
         """Resolve the prompt directory for the configured GDEX prompt version."""
         return PROMPTS_ROOT / str(self.config.prompt_version)
 
+    def _response_schema(self) -> dict[str, Any]:
+        criterion_object = {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string",
+                    "enum": ["yes", "somewhat", "no"],
+                },
+                "reason": {"type": "string"},
+            },
+            "required": ["label", "reason"],
+            "additionalProperties": False,
+        }
+        return {
+            "type": "object",
+            "properties": {
+                criterion: criterion_object
+                for criterion in self.config.criteria
+            },
+            "required": list(self.config.criteria),
+            "additionalProperties": False,
+        }
+
     def _parse_response(self, raw_response: str) -> dict[str, Any]:
         """Validate the structured GDEX rubric response returned by the judge model."""
-        parsed = json.loads(raw_response)
+        parsed = parse_llm_json(raw_response)
 
         missing = set(self.config.criteria) - parsed.keys()
         if missing:

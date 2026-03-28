@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import json
 import random
 from pathlib import Path
 from typing import Any
 
 from exgen.config import OxfordEvaluationConfig
 from exgen.evaluation.base import Evaluator
+from exgen.evaluation.json_utils import parse_llm_json
 from exgen.evaluation.verifier import GeminiVerifier
 from exgen.types import EvaluationOutcome, GeneratedExample
 
@@ -53,7 +53,11 @@ class OxfordEvalEvaluator(Evaluator):
             sentence_b=sentence_b,
         )
 
-        raw_response = self.verifier.verify(system_prompt, user_prompt)
+        raw_response = self.verifier.verify(
+            system_prompt,
+            user_prompt,
+            response_schema=self._response_schema(),
+        )
         parsed = self._parse_response(raw_response)
 
         generated_wins = parsed["preferred"] == generated_label
@@ -109,8 +113,26 @@ class OxfordEvalEvaluator(Evaluator):
     def _prompt_dir(self) -> Path:
         return PROMPTS_ROOT / self.config.prompt_version
 
+    def _response_schema(self) -> dict[str, Any]:
+        return {
+            "type": "object",
+            "properties": {
+                "preferred": {
+                    "type": "string",
+                    "enum": ["A", "B"],
+                },
+                "confidence": {
+                    "type": "string",
+                    "enum": ["high", "medium", "low"],
+                },
+                "reason": {"type": "string"},
+            },
+            "required": ["preferred", "confidence", "reason"],
+            "additionalProperties": False,
+        }
+
     def _parse_response(self, raw_response: str) -> dict[str, Any]:
-        parsed = json.loads(raw_response)
+        parsed = parse_llm_json(raw_response)
 
         required_keys = {"preferred", "confidence", "reason"}
         missing = required_keys - parsed.keys()

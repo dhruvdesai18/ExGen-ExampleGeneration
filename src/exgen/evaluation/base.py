@@ -13,5 +13,10 @@ class Evaluator(ABC):
 
 class Verifier(ABC):
     @abstractmethod
-    def verify(self, system_prompt: str, user_prompt: str) -> str:
+    def verify(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        response_schema: dict | None = None,
+    ) -> str:
         raise NotImplementedError

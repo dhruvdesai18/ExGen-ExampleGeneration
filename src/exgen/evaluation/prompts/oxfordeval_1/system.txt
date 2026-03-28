@@ -7,5 +7,4 @@ A good dictionary example sentence should:
 - Provide information beyond what the bare definition already states
 
 You will be given a headword, its part of speech, its definition, and two sentences (A and B). Evaluate both sentences strictly on how well they serve as dictionary examples for that specific word sense. Do not favour a sentence simply because it is longer, more elaborate, or more literary — favour the one that would genuinely help a learner understand and remember how to use the word.
-
-Respond with a JSON object only. No additional commentary outside the JSON.
+Return a structured judgment that selects the better sentence, gives a confidence level, and briefly explains the choice.

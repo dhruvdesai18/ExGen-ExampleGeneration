@@ -6,10 +6,4 @@ Sentence A: {{sentence_a}}
 Sentence B: {{sentence_b}}
 
 Which sentence better illustrates the meaning and usage of "{{word}}" for a language learner?
-
-Respond with this exact JSON structure:
-{
-  "preferred": "A" or "B",
-  "confidence": "high" or "medium" or "low",
-  "reason": "One or two sentences explaining your choice, focusing on exemplification quality."
-}
+Choose either A or B, assign a confidence level of high, medium, or low, and explain the decision in one or two sentences focused on exemplification quality.

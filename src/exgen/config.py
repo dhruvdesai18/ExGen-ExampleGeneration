@@ -99,12 +99,18 @@ class RunOutputConfig(BaseModel):
     root_dir: Path
 
 
+class RunEvaluationRuntimeConfig(BaseModel):
+    """Optional runtime controls for evaluation entrypoints."""
+    max_items_per_language: int | None = None
+
+
 class RunConfigReference(BaseModel):
     """Minimal run config before version-key resolution."""
     run: RunSection
     dataset: DatasetConfig
     versions: RunVersionsConfig
     output: RunOutputConfig
+    evaluation: RunEvaluationRuntimeConfig = Field(default_factory=RunEvaluationRuntimeConfig)
 
 
 class ResolvedRunConfig(BaseModel):
@@ -118,6 +124,7 @@ class ResolvedRunConfig(BaseModel):
     generator: GenerationConfig
     retrieval: RetrievalConfig
     evaluations: list[EvaluationConfig]
+    evaluation: RunEvaluationRuntimeConfig = Field(default_factory=RunEvaluationRuntimeConfig)
 
 
 def resolve_project_path(path: str | Path) -> Path:
@@ -214,6 +221,7 @@ def load_run_config(path_or_key: str | Path) -> ResolvedRunConfig:
             load_evaluation_config(version_key)
             for version_key in reference.versions.evaluations
         ],
+        evaluation=reference.evaluation,
     )
 
 
