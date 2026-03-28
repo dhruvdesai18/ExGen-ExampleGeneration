@@ -2,6 +2,7 @@
 from transformers import (
     Mistral3ForConditionalGeneration,
     MistralCommonBackend,
+    EarlyStoppingCallback,
 )
 from datasets import load_dataset
 from peft import LoraConfig, get_peft_model, TaskType
@@ -16,8 +17,13 @@ base_model = Mistral3ForConditionalGeneration.from_pretrained(
 )
 tokeniser = MistralCommonBackend.from_pretrained(base_model_id)
 
-# Load the dataset
-dataset = load_dataset("json", data_files="data/examples.jsonl", split="train")
+# Load the datasets
+train_dataset = load_dataset(
+    "parquet", data_files="data/train/train_items.parquet", split="train"
+)
+eval_dataset = load_dataset(
+    "parquet", data_files="data/eval/eval_items.parquet", split="train"
+)
 
 
 # Format the dataset
@@ -35,7 +41,7 @@ def format_sample(sample):
         },
         {
             "role": "assistant",
-            "content": f"<EXAMPLE>{sample["example"]}</EXAMPLE>",
+            "content": f"<EXAMPLE>{sample["sentence"]}</EXAMPLE>",
         },
     ]
     return {
@@ -48,7 +54,8 @@ def format_sample(sample):
     }
 
 
-formatted_dataset = dataset.map(format_sample)
+formatted_train_dataset = train_dataset.map(format_sample)
+formatted_eval_dataset = eval_dataset.map(format_sample)
 
 # Lora Configuration
 lora_config = LoraConfig(
@@ -75,13 +82,21 @@ training_args = SFTConfig(
     output_dir="./exgen-qlora-checkpoint",
     per_device_train_batch_size=4,
     gradient_accumulation_steps=4,
-    num_train_epochs=1,
-    learning_rate=2e-4,
+    num_train_epochs=5,
+    learning_rate=1e-4,
+    lr_scheduler_type="cosine",
+    warmup_ratio=0.05,
     bf16=True,
-    logging_steps=10,
     save_steps=50,
-    save_total_limit=1,
-    report_to="none",
+    save_total_limit=3,
+    load_best_model_at_end=True,
+    metric_for_best_model="eval_loss",
+    greater_is_better=False,
+    eval_strategy="steps",
+    eval_steps=50,
+    report_to="tensorboard",
+    logging_dir="./runs",
+    logging_steps=10,
     dataset_text_field="text",
     max_length=512,
 )
@@ -90,8 +105,10 @@ training_args = SFTConfig(
 trainer = SFTTrainer(
     model=peft_model,
     args=training_args,
-    train_dataset=formatted_dataset,
+    train_dataset=formatted_train_dataset,
+    eval_dataset=formatted_eval_dataset,
     processing_class=tokeniser,
+    callbacks=[EarlyStoppingCallback(early_stopping_patience=3)],
 )
 trainer.train()
 

@@ -36,6 +36,7 @@ src/exgen/pipeline/run_evaluation.py
 src/exgen/pipeline/run_full.py
 src/exgen/pipeline/run_generation.py
 src/exgen/prompting/few_shot_generator.py
+src/exgen/quantisation/hf_upload.py
 src/exgen/quantisation/quantise_gemma.py
 src/exgen/quantisation/quantise_ministral.py
 src/exgen/retrieval/fetch.py
