@@ -19,6 +19,7 @@ class ModelConfig(BaseModel):
     model_id: str
     max_tokens: int
     temperature: float = 0.0
+    top_p: float = 1.0
     timeout_seconds: int | None = None
 
 
@@ -98,12 +99,18 @@ class RunOutputConfig(BaseModel):
     root_dir: Path
 
 
+class RunEvaluationRuntimeConfig(BaseModel):
+    """Optional runtime controls for evaluation entrypoints."""
+    max_items_per_language: int | None = None
+
+
 class RunConfigReference(BaseModel):
     """Minimal run config before version-key resolution."""
     run: RunSection
     dataset: DatasetConfig
     versions: RunVersionsConfig
     output: RunOutputConfig
+    evaluation: RunEvaluationRuntimeConfig = Field(default_factory=RunEvaluationRuntimeConfig)
 
 
 class ResolvedRunConfig(BaseModel):
@@ -117,6 +124,7 @@ class ResolvedRunConfig(BaseModel):
     generator: GenerationConfig
     retrieval: RetrievalConfig
     evaluations: list[EvaluationConfig]
+    evaluation: RunEvaluationRuntimeConfig = Field(default_factory=RunEvaluationRuntimeConfig)
 
 
 def resolve_project_path(path: str | Path) -> Path:
@@ -213,6 +221,7 @@ def load_run_config(path_or_key: str | Path) -> ResolvedRunConfig:
             load_evaluation_config(version_key)
             for version_key in reference.versions.evaluations
         ],
+        evaluation=reference.evaluation,
     )
 
 
@@ -233,6 +242,7 @@ def build_run_context(config: ResolvedRunConfig) -> RunContext:
     artifacts = ArtifactPaths(
         root_dir=root_dir,
         generation_path=root_dir / "generations.jsonl",
+        selected_generation_path=root_dir / "selected_generations.jsonl",
         evaluation_path=root_dir / "evaluations.jsonl",
         manifest_path=root_dir / "manifest.json",
     )

@@ -27,6 +27,7 @@ class BaselineGenerator:
                 metadata={
                     "model_name": self.model.name,
                     "generator_type": "baseline",
+                    "prompt_version": self.prompt_version,
                 },
             )
             for text in outputs
@@ -37,7 +38,10 @@ class BaselineGenerator:
         return [
             {
                 "role": "system",
-                "content": "Generate a clear dictionary example sentence.",
+                "content": (
+                    "Generate a clear dictionary example sentence. "
+                    "Return exactly one sentence wrapped in <EXAMPLE> tags."
+                ),
             },
             {
                 "role": "user",
@@ -46,7 +50,7 @@ class BaselineGenerator:
                     f"Word: {lexical_item.word}\n"
                     f"Part of speech: {lexical_item.pos}\n"
                     f"Definition: {lexical_item.definition}\n"
-                    "Generate one natural sentence."
+                    "Generate one natural sentence and return only <EXAMPLE>...</EXAMPLE>."
                 ),
             },
         ]

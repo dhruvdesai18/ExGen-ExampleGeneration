@@ -22,3 +22,12 @@
 - Run tensorboard --logdir ./exgen-qlora-checkpoint/runs
 - Run sample inference with `uv run python inference/exgen_qlora_inference.py`
 - Full test split generation with `uv run python inference/full_qft_generation.py`
+
+# Runner
+```bash
+EXGEN_GEMINI_COOLDOWN_SECONDS=0.5 \
+EXGEN_GEMINI_THINKING_LEVEL=low \
+uv run python -m exgen.pipeline.run_evaluation \
+  --run-config configs/runs/ministral_augmented_eval/v1.yaml \
+  --generation-path results/qft/generated_examples.jsonl
+```

@@ -1,5 +1,5 @@
 name: ministral_qft
-model_id: Ministral-3-3B-Instruct-2512-bnb-nf4
+model_id: mistralai/Ministral-3-3B-Instruct-2512
 max_tokens: 128
 temperature: 0.7
 top_p: 0.9

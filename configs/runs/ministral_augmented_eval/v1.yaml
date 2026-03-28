@@ -4,7 +4,7 @@ run:
 
 dataset:
   split_path: data/processed/test_items.parquet
-  language: english
+  language: multilingual
 
 versions:
   model: ministral_qft/v1
@@ -16,3 +16,6 @@ versions:
 
 output:
   root_dir: data/outputs/runs/ministral_augmented_eval_v1
+
+evaluation:
+  max_items_per_language: 10

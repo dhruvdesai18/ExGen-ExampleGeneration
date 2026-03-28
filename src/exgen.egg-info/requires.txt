@@ -2,24 +2,24 @@ datasets==4.6.1
 google-genai
 matplotlib
 mistral-common==1.9.1
+openai>=2.0.0
 pandas
+pyarrow>=20.0.0
 python-dotenv
 pydantic
 pyyaml
 requests==2.32.5
 transformers==5.2.0
 ipykernel>=7.2.0
+torch==2.10.0
 peft>=0.18.1
-bitsandbytes>=0.49.2
 trl>=0.29.0
 huggingface-hub>=1.7.1
 tensorboard>=2.20.0
 setuptools==81.0.0
+tqdm>=4.67.3
 
 [gpu]
 
 [gpu:sys_platform != "darwin"]
 bitsandbytes==0.49.2
-peft==0.18.1
-torch==2.10.0
-trl==0.29.0

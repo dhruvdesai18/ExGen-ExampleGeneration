@@ -4,12 +4,14 @@ import argparse
 
 from exgen.config import build_run_context, load_run_config
 from exgen.datasets.loader import load_lexical_items
+from exgen.datasets.splits import ensure_default_split_artifacts
 from exgen.pipeline.full_pipeline import FullPipeline
 
 
 def run_full(run_config: str) -> None:
     config = load_run_config(run_config)
     context = build_run_context(config)
+    ensure_default_split_artifacts(seed=context.seed)
     lexical_items = load_lexical_items(context.dataset_path)
     manifest = FullPipeline().run(config, context, lexical_items)
     print(f"Wrote manifest to {context.artifacts.manifest_path}")

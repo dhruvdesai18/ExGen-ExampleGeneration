@@ -1,8 +1,8 @@
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Iterator
-from peft import PeftModel
-from transformers import Mistral3ForConditionalGeneration, MistralCommonBackend
+from typing import Any, Iterator
+
 from .base import Model
 
 
@@ -10,14 +10,16 @@ from .base import Model
 class MinistralQFT(Model):
     model_id: str
     adapter_path: str = "exgen-qlora-adapter"
-    _model: PeftModel | None = field(default=None, init=False, repr=False)
-    _tokeniser: MistralCommonBackend | None = field(
-        default=None, init=False, repr=False
-    )
+    _model: Any | None = field(default=None, init=False, repr=False)
+    _tokeniser: Any | None = field(default=None, init=False, repr=False)
 
     def _ensure_loaded(self):
         if self._model is not None and self._tokeniser is not None:
             return
+
+        from peft import PeftModel
+        from transformers import Mistral3ForConditionalGeneration, MistralCommonBackend
+
         # Load base quantised model
         base_model = Mistral3ForConditionalGeneration.from_pretrained(
             self.model_id, device_map="auto"
