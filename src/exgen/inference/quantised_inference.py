@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import argparse
 
+from exgen.config import load_yaml_config
 from exgen.datasets.loader import load_lexical_items
+
+
+MODEL_CONFIG_PATH = "configs/models/ministral_qft/v1.yaml"
 
 
 def run_inference(
@@ -14,9 +18,15 @@ def run_inference(
 ) -> None:
     from transformers import Mistral3ForConditionalGeneration, MistralCommonBackend
 
+    model_config = load_yaml_config(MODEL_CONFIG_PATH)
+    temperature = float(model_config["temperature"])
+    top_p = float(model_config["top_p"])
+
     lexical_items = load_lexical_items(dataset_path)
     lexical_item = lexical_items[row_index]
-    model = Mistral3ForConditionalGeneration.from_pretrained(model_id, device_map="auto")
+    model = Mistral3ForConditionalGeneration.from_pretrained(
+        model_id, device_map="auto"
+    )
     tokenizer = MistralCommonBackend.from_pretrained(model_id)
 
     messages = [
@@ -49,14 +59,18 @@ def run_inference(
         **inputs,
         max_new_tokens=max_new_tokens,
         do_sample=True,
-        temperature=0.7,
-        top_p=0.9,
+        temperature=temperature,
+        top_p=top_p,
     )[0]
-    decoded = tokenizer.decode(output[len(input_ids) :], skip_special_tokens=True).strip()
+    decoded = tokenizer.decode(
+        output[len(input_ids) :], skip_special_tokens=True
+    ).strip()
     print(decoded)
 
 
 def main() -> None:
+    model_config = load_yaml_config(MODEL_CONFIG_PATH)
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--dataset-path",
@@ -64,7 +78,9 @@ def main() -> None:
     )
     parser.add_argument("--row-index", type=int, default=0)
     parser.add_argument("--model-id", default="Ministral-3-3B-Instruct-2512-bnb-nf4")
-    parser.add_argument("--max-new-tokens", type=int, default=128)
+    parser.add_argument(
+        "--max-new-tokens", type=int, default=int(model_config["max_tokens"])
+    )
     args = parser.parse_args()
     run_inference(
         dataset_path=args.dataset_path,

@@ -13,6 +13,7 @@ src/exgen/datasets/loader.py
 src/exgen/datasets/splits.py
 src/exgen/evaluation/base.py
 src/exgen/evaluation/gdex.py
+src/exgen/evaluation/json_utils.py
 src/exgen/evaluation/oxfordeval.py
 src/exgen/evaluation/readability.py
 src/exgen/evaluation/verifier.py
@@ -23,9 +24,10 @@ src/exgen/generation/base.py
 src/exgen/generation/baseline.py
 src/exgen/generation/orchestrator.py
 src/exgen/generation/ranking.py
-src/exgen/inference/exgen_qlora_inference.py
-src/exgen/inference/full_qft_generation.py
+src/exgen/inference/one_sample_qft.py
 src/exgen/inference/quantised_inference.py
+src/exgen/inference/zero_full_qft.py
+src/exgen/inference/zero_sample_qft.py
 src/exgen/mlm/mlm_metric.py
 src/exgen/models/base.py
 src/exgen/models/gpt.py
