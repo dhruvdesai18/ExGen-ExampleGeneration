@@ -1,0 +1,21 @@
+run:
+  run_id: ministral_baseline_eval_v1
+  seed: 42
+
+dataset:
+  split_path: data/processed/test_items.parquet
+  language: multilingual
+
+versions:
+  model: ministral_qft/v1
+  generator: baseline/v1
+  retrieval: default/v1
+  evaluations:
+    - oxfordeval/v1
+    - gdex/v1
+
+output:
+  root_dir: data/outputs/runs/ministral_baseline_eval_v1
+
+evaluation:
+  max_items_per_language: 10

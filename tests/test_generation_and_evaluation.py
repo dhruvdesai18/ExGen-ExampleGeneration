@@ -372,7 +372,6 @@ class RankingAndPipelineTests(unittest.TestCase):
 
     def test_evaluation_pipeline_adapts_flat_generation_rows(self) -> None:
         from exgen.pipeline.run_evaluation import EvaluationPipeline
-        from exgen.storage import load_generation_records
         from exgen.types import ArtifactPaths, RunContext
 
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -429,10 +428,80 @@ class RankingAndPipelineTests(unittest.TestCase):
 
             self.assertEqual(len(records), 1)
             self.assertEqual(records[0].result["seen_reference_sentence"], "The bank opens at nine.")
-            selected_records = load_generation_records(context.artifacts.selected_generation_path)
-            self.assertEqual(len(selected_records), 1)
-            self.assertTrue(selected_records[0].metadata["selected"])
-            self.assertEqual(selected_records[0].example_text, "The bank closes at five.")
+
+    def test_evaluation_pipeline_uses_generations_jsonl_by_default(self) -> None:
+        from exgen.pipeline.run_evaluation import EvaluationPipeline
+        from exgen.storage import persist_generation_record
+        from exgen.types import ArtifactPaths, GenerationRecord, LexicalItemSnapshot, RunContext
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            context = RunContext(
+                run_id="run-1",
+                seed=42,
+                dataset_path=temp_path / "dataset.parquet",
+                language="multilingual",
+                versions={},
+                artifacts=ArtifactPaths(
+                    root_dir=temp_path,
+                    generation_path=temp_path / "generations.jsonl",
+                    selected_generation_path=temp_path / "selected_generations.jsonl",
+                    evaluation_path=temp_path / "evaluations.jsonl",
+                    manifest_path=temp_path / "manifest.json",
+                ),
+            )
+            stale_snapshot = LexicalItemSnapshot(
+                id="lex-stale",
+                language="en",
+                word="stale",
+                pos="NOUN",
+                definition="stale definition",
+                source="wordnet",
+                reference_sentence="Stale reference.",
+                reference_sentence_id="sent-stale",
+            )
+            fresh_snapshot = LexicalItemSnapshot(
+                id="lex-fresh",
+                language="en",
+                word="fresh",
+                pos="NOUN",
+                definition="fresh definition",
+                source="wordnet",
+                reference_sentence="Fresh reference.",
+                reference_sentence_id="sent-fresh",
+            )
+            persist_generation_record(
+                GenerationRecord(
+                    run_id="run-1",
+                    generated_example_id="stale-gen",
+                    lexical_item_id="lex-stale",
+                    lexical_item=stale_snapshot,
+                    example_text="Stale sentence",
+                    metadata={"selected": True},
+                ),
+                context.artifacts.selected_generation_path,
+            )
+            persist_generation_record(
+                GenerationRecord(
+                    run_id="run-1",
+                    generated_example_id="fresh-gen",
+                    lexical_item_id="lex-fresh",
+                    lexical_item=fresh_snapshot,
+                    example_text="Fresh sentence",
+                    metadata={"selected": True},
+                ),
+                context.artifacts.generation_path,
+            )
+            config = SimpleNamespace(
+                evaluations=[SimpleNamespace(name="fake-metric", prompt_version=None)]
+            )
+
+            with patch("exgen.pipeline.run_evaluation.create_evaluator", return_value=FakeEvaluator()):
+                records = EvaluationPipeline().run(config, context)
+
+            self.assertEqual(len(records), 1)
+            self.assertEqual(records[0].generated_example_id, "fresh-gen")
+            self.assertEqual(records[0].result["seen_reference_sentence"], "Fresh reference.")
 
     def test_run_evaluation_accepts_dataset_override_for_flat_rows(self) -> None:
         from exgen.pipeline.run_evaluation import run_evaluation

@@ -22,7 +22,6 @@ from exgen.pipeline.factories import create_evaluator
 from exgen.pipeline.records import build_evaluation_record, generation_record_to_example
 from exgen.storage import (
     load_generation_records,
-    persist_generation_record,
     persist_evaluation_record,
     reset_output_file,
 )
@@ -95,10 +94,7 @@ class EvaluationPipeline:
     ) -> list[GenerationRecord]:
         if generation_path is not None:
             return _load_generation_records_for_evaluation(generation_path, context)
-        selected_records = load_generation_records(context.artifacts.selected_generation_path)
-        if selected_records:
-            return selected_records
-        return load_generation_records(context.artifacts.generation_path)
+        return _load_generation_records_for_evaluation(context.artifacts.generation_path, context)
 
 
 def _load_generation_records_for_evaluation(
@@ -123,11 +119,7 @@ def _load_generation_records_for_evaluation(
     if _looks_like_generation_record(first_row):
         return [GenerationRecord.model_validate(row) for row in rows]
     if _looks_like_flat_generation_row(first_row):
-        records = _adapt_flat_generation_rows(rows, context, source_path=path)
-        reset_output_file(context.artifacts.selected_generation_path)
-        for record in records:
-            persist_generation_record(record, context.artifacts.selected_generation_path)
-        return records
+        return _adapt_flat_generation_rows(rows, context, source_path=path)
     raise ValueError(
         "Unsupported generation row format. Expected GenerationRecord rows or flat rows "
         "with language/word/pos/definition/example."
