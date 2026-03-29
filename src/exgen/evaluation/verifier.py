@@ -91,7 +91,7 @@ class GeminiVerifier(Verifier):
     def _build_config(self, *, types, system_prompt: str, response_schema: dict | None):
         config_kwargs = {
             "system_instruction": system_prompt,
-            "temperature": 0.8,
+            "temperature": 0.0,
             "response_mime_type": "application/json",
         }
         if response_schema is not None:

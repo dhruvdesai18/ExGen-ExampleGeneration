@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import random
 from pathlib import Path
 from typing import Any
@@ -19,7 +20,6 @@ class OxfordEvalEvaluator(Evaluator):
     def __init__(self, config: OxfordEvaluationConfig) -> None:
         self.config = config
         self.verifier = GeminiVerifier(model_name=config.judge_model_name)
-        self.rng = random.Random()
 
     def evaluate(self, example: GeneratedExample) -> EvaluationOutcome:
         lexical_item = example.lexical_item
@@ -30,7 +30,7 @@ class OxfordEvalEvaluator(Evaluator):
             )
 
         generated_first = (
-            self.rng.choice([True, False])
+            self._deterministic_generated_first(lexical_item.id)
             if self.config.randomize_order
             else True
         )
@@ -130,6 +130,11 @@ class OxfordEvalEvaluator(Evaluator):
             "required": ["preferred", "confidence", "reason"],
             "additionalProperties": False,
         }
+
+    def _deterministic_generated_first(self, lexical_item_id: str) -> bool:
+        payload = lexical_item_id.encode("utf-8")
+        digest = hashlib.sha1(payload).hexdigest()
+        return int(digest[:8], 16) % 2 == 0
 
     def _parse_response(self, raw_response: str) -> dict[str, Any]:
         parsed = parse_llm_json(raw_response)

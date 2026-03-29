@@ -18,4 +18,4 @@ output:
   root_dir: data/outputs/runs/ministral_baseline_eval_v1
 
 evaluation:
-  max_items_per_language: 10
+  max_items_per_language: 100

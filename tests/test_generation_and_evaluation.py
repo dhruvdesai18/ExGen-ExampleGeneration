@@ -139,6 +139,7 @@ class RankingAndPipelineTests(unittest.TestCase):
             captured["config"].response_json_schema["properties"]["ok"]["type"],
             "boolean",
         )
+        self.assertEqual(captured["config"].temperature, 0.0)
 
     def test_mlm_ranker_marks_single_selected_candidate(self) -> None:
         from exgen.generation.ranking import MLMCandidateRanker
@@ -632,6 +633,63 @@ class RankingAndPipelineTests(unittest.TestCase):
         self.assertEqual(outcome.metadata["sentence_a"], "The bank closes at five.")
         self.assertEqual(outcome.metadata["sentence_b"], "The bank opens at nine.")
         self.assertEqual(outcome.metadata["reference_sentence_id"], "sent-1")
+
+    def test_oxford_eval_order_is_deterministic_per_lexical_item(self) -> None:
+        from exgen.config import OxfordEvaluationConfig
+        from exgen.evaluation.oxfordeval import OxfordEvalEvaluator
+        from exgen.types import GeneratedExample, LexicalItem
+
+        class FakeVerifier:
+            def __init__(self, model_name: str) -> None:
+                self.model_name = model_name
+
+            def verify(
+                self,
+                system_prompt: str,
+                user_prompt: str,
+                response_schema: dict | None = None,
+            ) -> str:
+                return json.dumps(
+                    {
+                        "preferred": "A",
+                        "confidence": "high",
+                        "reason": "Stable choice.",
+                    }
+                )
+
+        lexical_item = LexicalItem(
+            id="lex-stable",
+            language="en",
+            word="bank",
+            pos="NOUN",
+            definition="a financial institution",
+            source="wordnet",
+            reference_sentence="The bank opens at nine.",
+            reference_sentence_id="sent-1",
+        )
+        example = GeneratedExample(
+            id="gen-1",
+            lexical_item=lexical_item,
+            example_text="The bank closes at five.",
+        )
+        config = OxfordEvaluationConfig(
+            name="oxfordeval",
+            prompt_version="oxfordeval_1",
+            randomize_order=True,
+            judge_model_name="fake-judge",
+        )
+
+        with patch("exgen.evaluation.oxfordeval.GeminiVerifier", FakeVerifier):
+            evaluator = OxfordEvalEvaluator(config)
+            outcome_one = evaluator.evaluate(example)
+            outcome_two = evaluator.evaluate(example)
+
+        self.assertEqual(
+            outcome_one.metadata["generated_first"],
+            outcome_two.metadata["generated_first"],
+        )
+        self.assertEqual(outcome_one.metadata["sentence_a"], outcome_two.metadata["sentence_a"])
+        self.assertEqual(outcome_one.metadata["sentence_b"], outcome_two.metadata["sentence_b"])
 
 
 if __name__ == "__main__":
