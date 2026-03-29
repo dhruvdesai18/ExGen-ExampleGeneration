@@ -49,6 +49,18 @@ def load_generation_records(path: str | Path) -> list[GenerationRecord]:
         ]
 
 
+def load_evaluation_records(path: str | Path) -> list[EvaluationRecord]:
+    resolved = resolve_project_path(path)
+    if not resolved.exists():
+        return []
+    with resolved.open("r", encoding="utf-8") as handle:
+        return [
+            EvaluationRecord.model_validate(json.loads(line))
+            for line in handle
+            if line.strip()
+        ]
+
+
 def reset_output_file(path: str | Path) -> Path:
     resolved = resolve_project_path(path)
     resolved.parent.mkdir(parents=True, exist_ok=True)

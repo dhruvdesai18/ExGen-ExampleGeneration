@@ -7,8 +7,9 @@ DATASET ?=
 MAX_ITEMS ?=
 COOLDOWN ?=
 THINKING ?=
+RESUME ?=
 RUN_CONFIG = configs/runs/$(RUN)/$(CFG)
-EVAL_ARGS = --run-config "$(RUN_CONFIG)" $(if $(GEN),--generation-path "$(GEN)") $(if $(DATASET),--dataset-path "$(DATASET)") $(if $(MAX_ITEMS),--max-items "$(MAX_ITEMS)")
+EVAL_ARGS = --run-config "$(RUN_CONFIG)" $(if $(GEN),--generation-path "$(GEN)") $(if $(DATASET),--dataset-path "$(DATASET)") $(if $(MAX_ITEMS),--max-items "$(MAX_ITEMS)") $(if $(RESUME),--resume)
 
 evaluate:
 	@test -n "$(RUN)" || (echo "Usage: make evaluate RUN=<run-folder> CFG=<yaml-file> [GEN=<jsonl>] [DATASET=<path>] [MAX_ITEMS=<n>] [COOLDOWN=<seconds>] [THINKING=<level>]" && exit 1)

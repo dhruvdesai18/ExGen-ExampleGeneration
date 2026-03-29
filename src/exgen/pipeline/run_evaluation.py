@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
-import uuid
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +21,7 @@ from exgen.datasets.loader import (
 from exgen.pipeline.factories import create_evaluator
 from exgen.pipeline.records import build_evaluation_record, generation_record_to_example
 from exgen.storage import (
+    load_evaluation_records,
     load_generation_records,
     persist_evaluation_record,
     reset_output_file,
@@ -41,6 +42,7 @@ class EvaluationPipeline:
         generation_records: list[GenerationRecord] | None = None,
         generation_path: str | Path | None = None,
         max_items: int | None = None,
+        resume: bool = False,
     ) -> list[EvaluationRecord]:
         """Evaluate generated examples and persist normalized result rows."""
         source_records = generation_records or self._load_source_records(
@@ -54,21 +56,40 @@ class EvaluationPipeline:
         ]
         if max_items is not None:
             selected_records = _limit_records_per_language(selected_records, max_items)
-        reset_output_file(context.artifacts.evaluation_path)
+        completed_keys: set[tuple[str, str]] = set()
+        records: list[EvaluationRecord] = []
+        if resume:
+            records = _dedupe_evaluation_records(
+                load_evaluation_records(context.artifacts.evaluation_path)
+            )
+            _rewrite_evaluation_records(context.artifacts.evaluation_path, records)
+            completed_keys = {
+                (record.lexical_item_id, record.metric_name)
+                for record in records
+            }
+        else:
+            reset_output_file(context.artifacts.evaluation_path)
         evaluators = [
             (evaluation_config, create_evaluator(evaluation_config))
             for evaluation_config in config.evaluations
         ]
-        total_evaluations = len(selected_records) * len(evaluators)
+        remaining_evaluations = sum(
+            1
+            for generation_record in selected_records
+            for evaluation_config, _evaluator in evaluators
+            if (generation_record.lexical_item_id, evaluation_config.name) not in completed_keys
+        )
         progress = _progress(
-            total=total_evaluations,
-            desc=f"Evaluating {len(selected_records)} items x {len(evaluators)} metrics = {total_evaluations}",
+            total=remaining_evaluations,
+            desc=f"Evaluating {len(selected_records)} items x {len(evaluators)} metrics = {remaining_evaluations}",
         )
 
-        records: list[EvaluationRecord] = []
         for generation_record in selected_records:
             example = generation_record_to_example(generation_record)
             for evaluation_config, evaluator in evaluators:
+                completion_key = (generation_record.lexical_item_id, evaluation_config.name)
+                if completion_key in completed_keys:
+                    continue
                 _set_progress_status(
                     progress,
                     word=example.lexical_item.word,
@@ -167,7 +188,10 @@ def _adapt_flat_generation_rows(
         adapted.append(
             GenerationRecord(
                 run_id=context.run_id,
-                generated_example_id=f"adapted-{uuid.uuid4()}",
+                generated_example_id=_stable_generated_example_id(
+                    lexical_item_id=lexical_item_id,
+                    example_text=str(row["example"]),
+                ),
                 lexical_item_id=lexical_item_id,
                 lexical_item=LexicalItemSnapshot(
                     id=lexical_item_id,
@@ -280,11 +304,40 @@ def _suggest_matching_dataset_path(
     return ""
 
 
+def _stable_generated_example_id(*, lexical_item_id: str, example_text: str) -> str:
+    payload = "||".join((lexical_item_id, example_text))
+    return f"adapted-{hashlib.sha1(payload.encode('utf-8')).hexdigest()}"
+
+
+def _dedupe_evaluation_records(
+    records: list[EvaluationRecord],
+) -> list[EvaluationRecord]:
+    deduped: list[EvaluationRecord] = []
+    seen: set[tuple[str, str]] = set()
+    for record in records:
+        key = (record.lexical_item_id, record.metric_name)
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(record)
+    return deduped
+
+
+def _rewrite_evaluation_records(
+    path: str | Path,
+    records: list[EvaluationRecord],
+) -> None:
+    reset_output_file(path)
+    for record in records:
+        persist_evaluation_record(record, path)
+
+
 def run_evaluation(
     run_config: str,
     generation_path: str | Path | None = None,
     dataset_path: str | Path | None = None,
     max_items: int | None = None,
+    resume: bool = False,
 ) -> None:
     """Load the run config, execute evaluation, and report the output location."""
     config = load_run_config(run_config)
@@ -301,6 +354,7 @@ def run_evaluation(
         context,
         generation_path=generation_path,
         max_items=max_items,
+        resume=resume,
     )
     print(f"Evaluated {len(records)} records into {context.artifacts.evaluation_path}")
 
@@ -325,12 +379,18 @@ def main() -> None:
         type=int,
         help="Optional maximum number of lexical items to evaluate per language after loading selected records.",
     )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume from existing evaluations.jsonl by skipping already completed generated_example_id/metric pairs.",
+    )
     args = parser.parse_args()
     run_evaluation(
         args.run_config,
         generation_path=args.generation_path,
         dataset_path=args.dataset_path,
         max_items=args.max_items,
+        resume=args.resume,
     )
 
 

@@ -504,6 +504,108 @@ class RankingAndPipelineTests(unittest.TestCase):
             self.assertEqual(records[0].generated_example_id, "fresh-gen")
             self.assertEqual(records[0].result["seen_reference_sentence"], "Fresh reference.")
 
+    def test_evaluation_pipeline_resumes_without_rewriting_completed_rows(self) -> None:
+        from exgen.pipeline.run_evaluation import EvaluationPipeline
+        from exgen.storage import load_evaluation_records, persist_evaluation_record
+        from exgen.types import (
+            ArtifactPaths,
+            EvaluationRecord,
+            GenerationRecord,
+            LexicalItemSnapshot,
+            RunContext,
+        )
+
+        snapshot = LexicalItemSnapshot(
+            id="lex-1",
+            language="en",
+            word="bank",
+            pos="NOUN",
+            definition="a financial institution",
+            source="wordnet",
+            reference_sentence="The bank opens at nine.",
+            reference_sentence_id="sent-1",
+        )
+        first = GenerationRecord(
+            run_id="run-1",
+            generated_example_id="gen-1",
+            lexical_item_id="lex-1",
+            lexical_item=snapshot,
+            example_text="Generated sentence one",
+            metadata={"selected": True},
+        )
+        second = GenerationRecord(
+            run_id="run-1",
+            generated_example_id="gen-2",
+            lexical_item_id="lex-2",
+            lexical_item=snapshot.model_copy(
+                update={
+                    "id": "lex-2",
+                    "word": "loan",
+                    "reference_sentence": "The loan was approved.",
+                    "reference_sentence_id": "sent-2",
+                }
+            ),
+            example_text="Generated sentence two",
+            metadata={"selected": True},
+        )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            context = RunContext(
+                run_id="run-1",
+                seed=42,
+                dataset_path=temp_path / "dataset.parquet",
+                language="multilingual",
+                versions={},
+                artifacts=ArtifactPaths(
+                    root_dir=temp_path,
+                    generation_path=temp_path / "generations.jsonl",
+                    selected_generation_path=temp_path / "selected_generations.jsonl",
+                    evaluation_path=temp_path / "evaluations.jsonl",
+                    manifest_path=temp_path / "manifest.json",
+                ),
+            )
+            persist_evaluation_record(
+                EvaluationRecord(
+                    id="existing",
+                    run_id="run-1",
+                    metric_name="fake-metric",
+                    metric_config_name="fake-metric",
+                    language="en",
+                    lexical_item_id="lex-1",
+                    lexical_item=snapshot,
+                    generated_example_id="gen-1",
+                    score=1.0,
+                    result={"seen_reference_sentence": "The bank opens at nine."},
+                    metadata={"evaluated_word": "bank"},
+                    provenance={"metric_name": "fake"},
+                ),
+                context.artifacts.evaluation_path,
+            )
+            config = SimpleNamespace(
+                evaluations=[SimpleNamespace(name="fake-metric", prompt_version=None)]
+            )
+
+            with patch("exgen.pipeline.run_evaluation.create_evaluator", return_value=FakeEvaluator()):
+                records = EvaluationPipeline().run(
+                    config,
+                    context,
+                    generation_records=[first, second],
+                    resume=True,
+                )
+
+            self.assertEqual(len(records), 2)
+            self.assertEqual(
+                [record.generated_example_id for record in records],
+                ["gen-1", "gen-2"],
+            )
+            persisted = load_evaluation_records(context.artifacts.evaluation_path)
+            self.assertEqual(len(persisted), 2)
+            self.assertEqual(
+                [record.generated_example_id for record in persisted],
+                ["gen-1", "gen-2"],
+            )
+
     def test_run_evaluation_accepts_dataset_override_for_flat_rows(self) -> None:
         from exgen.pipeline.run_evaluation import run_evaluation
         from exgen.types import ArtifactPaths, RunContext
