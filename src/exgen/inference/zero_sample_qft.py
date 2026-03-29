@@ -5,6 +5,15 @@ import pandas as pd
 from peft import PeftModel
 from transformers import Mistral3ForConditionalGeneration, MistralCommonBackend
 
+from exgen.config import load_yaml_config
+
+
+MODEL_CONFIG_PATH = "configs/models/ministral_qft/v1.yaml"
+model_config = load_yaml_config(MODEL_CONFIG_PATH)
+max_new_tokens = int(model_config["max_tokens"])
+temperature = float(model_config["temperature"])
+top_p = float(model_config["top_p"])
+
 # Load base quantised model
 base_model = Mistral3ForConditionalGeneration.from_pretrained(
     "Ministral-3-3B-Instruct-2512-bnb-nf4", device_map="auto"
@@ -54,7 +63,11 @@ print(f"\nUser Prompt:\n{tokeniser.decode(input_ids, skip_special_tokens=False)}
 
 # Generate
 output = model.generate(
-    **inputs, max_new_tokens=512, do_sample=True, temperature=0.7, top_p=0.9
+    **inputs,
+    max_new_tokens=max_new_tokens,
+    do_sample=True,
+    temperature=temperature,
+    top_p=top_p,
 )[0]
 response = tokeniser.decode(output[len(input_ids) :], skip_special_tokens=True)
 

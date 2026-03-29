@@ -6,6 +6,15 @@ import pandas as pd
 from peft import PeftModel
 from transformers import Mistral3ForConditionalGeneration, MistralCommonBackend
 
+from exgen.config import load_yaml_config
+
+
+MODEL_CONFIG_PATH = "configs/models/ministral_qft/v1.yaml"
+model_config = load_yaml_config(MODEL_CONFIG_PATH)
+max_new_tokens = int(model_config["max_tokens"])
+temperature = float(model_config["temperature"])
+top_p = float(model_config["top_p"])
+
 # Load base quantised model
 base_model = Mistral3ForConditionalGeneration.from_pretrained(
     "Ministral-3-3B-Instruct-2512-bnb-nf4", device_map="auto"
@@ -20,19 +29,21 @@ print(f"Model loaded on device: {model.device}")
 df = pd.read_parquet("data/test/test_items.parquet")
 print(f"Running inference on {len(df)} entries...")
 
-Path("results/qft").mkdir(parents=True, exist_ok=True)
+Path("data/outputs/runs/exgen-qlora").mkdir(parents=True, exist_ok=True)
 
-with open("results/qft/generated_examples.jsonl", "w", encoding="utf-8") as out_f:
+with open(
+    "data/outputs/runs/exgen-qlora/zero_shot_generations.jsonl", "w", encoding="utf-8"
+) as out_f:
     for i, entry in df.iterrows():
         messages = [
             {
                 "role": "user",
                 "content": (
                     "Generate an example sentence for this dictionary entry:\n"
-                    f"<LANGUAGE>{entry['language']}</LANGUAGE>\n"
-                    f"<WORD>{entry['word']}</WORD>\n"
-                    f"<POS>{entry['pos']}</POS>\n"
-                    f"<DEFINITION>{entry['definition']}</DEFINITION>"
+                    f"<LANGUAGE>{entry["language"]}</LANGUAGE>\n"
+                    f"<WORD>{entry["word"]}</WORD>\n"
+                    f"<POS>{entry["pos"]}</POS>\n"
+                    f"<DEFINITION>{entry["definition"]}</DEFINITION>"
                 ),
             },
             {
@@ -56,7 +67,11 @@ with open("results/qft/generated_examples.jsonl", "w", encoding="utf-8") as out_
         input_ids = inputs["input_ids"][0]
 
         output = model.generate(
-            **inputs, max_new_tokens=512, do_sample=True, temperature=0.7, top_p=0.9
+            **inputs,
+            max_new_tokens=max_new_tokens,
+            do_sample=True,
+            temperature=temperature,
+            top_p=top_p,
         )[0]
         response = tokeniser.decode(output[len(input_ids) :], skip_special_tokens=True)
 
@@ -76,4 +91,6 @@ with open("results/qft/generated_examples.jsonl", "w", encoding="utf-8") as out_
         if (i + 1) % 10 == 0:
             print(f"  {i + 1}/{len(df)} done")
 
-print("Fully Completed. Results saved to results/qft/generated_examples.jsonl")
+print(
+    "Fully Completed. Results saved to data/outputs/runs/exgen-qlora/zero_shot_generations.jsonl"
+)
