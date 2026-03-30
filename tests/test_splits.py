@@ -97,8 +97,10 @@ class SplitArtifactsTest(unittest.TestCase):
             train_examples = pd.read_parquet(artifact_paths["train_examples"])
             eval_examples = pd.read_parquet(artifact_paths["eval_examples"])
             test_examples = pd.read_parquet(artifact_paths["test_examples"])
+            heldout_examples = pd.read_parquet(artifact_paths["heldout_examples"])
             eval_items = pd.read_parquet(artifact_paths["eval_items"])
             test_items = pd.read_parquet(artifact_paths["test_items"])
+            heldout_items = pd.read_parquet(artifact_paths["heldout_items"])
 
             self.assertEqual(len(train_examples), 0)
             self.assertEqual(
@@ -117,9 +119,21 @@ class SplitArtifactsTest(unittest.TestCase):
                 test_items.groupby("language").size().to_dict(),
                 {"en": 1, "hi": 1, "uk": 1},
             )
+            self.assertEqual(
+                heldout_examples.groupby("language").size().to_dict(),
+                {"en": 4, "hi": 4, "uk": 4},
+            )
+            self.assertEqual(
+                heldout_items.groupby("language").size().to_dict(),
+                {"en": 2, "hi": 2, "uk": 2},
+            )
 
             self.assertTrue(
                 set(eval_examples["lexical_item_id"]).isdisjoint(set(test_examples["lexical_item_id"]))
+            )
+            self.assertEqual(
+                set(heldout_examples["lexical_item_id"]),
+                set(eval_examples["lexical_item_id"]) | set(test_examples["lexical_item_id"]),
             )
 
             for lexical_item_id, group in test_examples.groupby("lexical_item_id"):

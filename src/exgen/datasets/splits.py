@@ -25,6 +25,8 @@ DEFAULT_CANONICAL_ARTIFACTS = {
     "eval_items": "eval_items.parquet",
     "test_examples": "test_examples.parquet",
     "test_items": "test_items.parquet",
+    "heldout_examples": "heldout_examples.parquet",
+    "heldout_items": "heldout_items.parquet",
 }
 
 
@@ -121,9 +123,13 @@ def build_split_artifacts(
     train_examples = _prepare_example_rows(frame[frame["lexical_item_id"].isin(train_ids)].copy())
     eval_examples = _prepare_example_rows(frame[frame["lexical_item_id"].isin(eval_ids)].copy())
     test_examples = _prepare_example_rows(frame[frame["lexical_item_id"].isin(test_ids)].copy())
+    heldout_examples = _prepare_example_rows(
+        frame[frame["lexical_item_id"].isin(eval_ids | test_ids)].copy()
+    )
     train_items = _prepare_item_rows(train_examples)
     eval_items = _prepare_item_rows(eval_examples)
     test_items = _prepare_item_rows(test_examples)
+    heldout_items = _prepare_item_rows(heldout_examples)
 
     artifact_frames = {
         "train_examples": train_examples,
@@ -132,6 +138,8 @@ def build_split_artifacts(
         "eval_items": eval_items,
         "test_examples": test_examples,
         "test_items": test_items,
+        "heldout_examples": heldout_examples,
+        "heldout_items": heldout_items,
     }
     artifact_paths = {
         key: resolved_output_dir / name
